@@ -1,0 +1,78 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - 8080:8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_DATABASE_VENDOR: ${KEYCLOAK_DATABASE_VENDOR}
+    command: start-dev
+    volumes:
+      - keycloak_data:/opt/keycloak/data 
+    depends_on:
+      postgres: 
+        condition: service_healthy 
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: products
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app-network
+
+  productservice:
+    build:
+      context: ./productservice
+      dockerfile: Dockerfile
+    container_name: ProductService
+    ports:
+      - "8081:8080"
+    environment:
+      DATABASE_DSN: ${DATABASE_DSN}
+      SERVER_PORT: ${SERVER_PORT}
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  ecd-service:
+    build:
+      context: ./ECD
+      dockerfile: Dockerfile
+    container_name: ecd-service
+    ports:
+      - "8082:8080"
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  keycloak_data: 
+  postgres_data: 

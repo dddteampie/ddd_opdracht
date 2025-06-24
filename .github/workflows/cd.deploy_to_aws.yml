@@ -1,0 +1,59 @@
+name: Deploy Microservices to AWS ECS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - service: ecd
+            ecr_repo: ECR_REPO_ECD
+          - service: product
+            ecr_repo: ECR_REPO_PRODUCT
+
+    env:
+      cluster: smart-care-assist
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker build \
+            --cache-from=type=registry,ref=${{ secrets[matrix.ecr_repo] }}:cache \
+            --cache-to=type=inline \
+            -t ${{ matrix.service }} ./${{ matrix.service }}
+
+      - name: Tag and push image to ECR
+        env:
+          ECR_REPO: ${{ secrets[matrix.ecr_repo] }}
+        run: |
+          IMAGE_TAG=$ECR_REPO:${{ github.sha }}
+          docker tag ${{ matrix.service }} $IMAGE_TAG
+          docker push $IMAGE_TAG
+
+      - name: Deploy updated image to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.cluster }} \
+            --service ${{ matrix.service }}-service \
+            --force-new-deployment

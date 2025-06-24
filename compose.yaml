@@ -69,6 +69,21 @@ services:
     networks:
       - app-network
 
+  behoeftebepaling-service:
+    build:
+      context: ./behoeftebepaling
+      dockerfile: Dockerfile
+    container_name: behoeftebepaling-service
+    ports:
+      - "8083:8080" 
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge

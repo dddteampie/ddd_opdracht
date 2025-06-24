@@ -16,6 +16,9 @@ jobs:
             ecr_repo: ECR_REPO_ECD
           - service: product
             ecr_repo: ECR_REPO_PRODUCT
+          - service: behoeftebepaling
+            ecr_repo: ECR_REPO_BEHOEFTEBEPALING
+
 
     env:
       cluster: smart-care-assist

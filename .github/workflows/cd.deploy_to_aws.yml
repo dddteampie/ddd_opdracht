@@ -35,8 +35,13 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
-          docker build -t ${{ matrix.service }} ./${{ matrix.service }}
+          docker build \
+            --cache-from=type=registry,ref=${{ secrets[matrix.ecr_repo] }}:cache \
+            --cache-to=type=inline \
+            -t ${{ matrix.service }} ./${{ matrix.service }}
 
       - name: Tag and push image to ECR
         env:

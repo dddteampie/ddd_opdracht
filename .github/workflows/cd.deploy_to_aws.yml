@@ -17,6 +17,9 @@ jobs:
           - service: product
             ecr_repo: ECR_REPO_PRODUCT
 
+    env:
+      cluster: smart-care-assist
+
     steps:
       - uses: actions/checkout@v4
 
@@ -33,19 +36,19 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ matrix.service }} ./$(matrix.service)
+          docker build -t ${{ matrix.service }} ./${{ matrix.service }}
 
       - name: Tag and push image to ECR
         env:
           ECR_REPO: ${{ secrets[matrix.ecr_repo] }}
         run: |
-          IMAGE_TAG=$ECR_REPO:latest
+          IMAGE_TAG=$ECR_REPO:${{ github.sha }}
           docker tag ${{ matrix.service }} $IMAGE_TAG
           docker push $IMAGE_TAG
 
       - name: Deploy updated image to ECS
         run: |
           aws ecs update-service \
-            --cluster my-ecs-cluster \
+            --cluster ${{ env.cluster }} \
             --service ${{ matrix.service }}-service \
             --force-new-deployment

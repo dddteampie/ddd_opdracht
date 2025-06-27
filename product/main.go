@@ -4,20 +4,21 @@ import (
 	"log"
 	"net/http"
 
-	"productservice/data_access/data_handling" // Import the new database package
-	"productservice/handlers"
+	"product/handlers"
+	"product/pkg/config"
+	product_repo "product/repository" // Import the new database package
 )
 
 func main() {
 	//load correct config
-	config, err := LoadConfig("config.json")
+	config, err := config.LoadConfig(".env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 	log.Printf("Configuration loaded: DatabaseDSN=%s, ServerPort=%s", config.DatabaseDSN, config.ServerPort)
 
 	//initialize config
-	db, err := data_handling.InitDB(config.DatabaseDSN)
+	db, err := product_repo.InitDB(config.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
 	}
@@ -30,6 +31,6 @@ func main() {
 	http.HandleFunc("/product/offer", handlers.VoegProductAanbodToe)
 	http.HandleFunc("/product/add", handlers.VoegNieuwProductToe)
 
-	log.Printf("ProductService draait op %s...", config.ServerPort)
+	log.Printf("Product-service draait op %s...", config.ServerPort)
 	log.Fatal(http.ListenAndServe(config.ServerPort, nil))
 }

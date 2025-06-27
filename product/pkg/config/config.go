@@ -1,9 +1,10 @@
-package main
+package config
 
 import (
-	"encoding/json"
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -41,21 +42,29 @@ func LoadConfigFromEnv() (*Config, error) {
 	if serverPort := os.Getenv("SERVER_PORT"); serverPort != "" {
 		cfg.ServerPort = serverPort
 	}
+
 	return cfg, nil
 }
 
 // LoadConfigFromFile reads the configuration from the specified JSON file path used local runtime ONLY
 func LoadConfigFromFile(filePath string) (*Config, error) {
-	data, err := os.ReadFile(filePath)
+	err := godotenv.Load(filePath)
 	if err != nil {
+		log.Printf("Error loading .env file from %s: %v", filePath, err)
 		return nil, err
 	}
+	log.Printf(".env file loaded successfully from %s.", filePath)
 
-	var cfg Config
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, err
+	cfg := &Config{}
+	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
+	cfg.ServerPort = os.Getenv("SERVER_PORT")
+
+	if cfg.DatabaseDSN == "" {
+		log.Println("Warning: DATABASE_DSN is not set in the .env file.")
+	}
+	if cfg.ServerPort == "" {
+		log.Println("Warning: SERVER_PORT is not set in the .env file.")
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }

@@ -1,4 +1,4 @@
-package data_handling
+package product_repo
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"productservice/data_access/data_objects"
+	models "product/model"
 )
 
 // InitDB initializes the database connection and performs auto-migrations.
@@ -21,13 +21,13 @@ func InitDB(dsn string) (*gorm.DB, error) {
 
 	// Auto-Migrate models
 	err = db.AutoMigrate(
-		&data_objects.Product{},
-		&data_objects.Categorie{},
-		&data_objects.Specificatie{},
-		&data_objects.Review{},
-		&data_objects.ProductAanbod{},
-		&data_objects.ProductType{},
-		&data_objects.Supplier{},
+		&models.Product{},
+		&models.Categorie{},
+		&models.Specificatie{},
+		&models.Review{},
+		&models.ProductAanbod{},
+		&models.ProductType{},
+		&models.Supplier{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)

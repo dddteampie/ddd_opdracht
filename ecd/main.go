@@ -2,10 +2,12 @@ package main
 
 import (
 	handler "ecd/api"
+	"ecd/config"
 	database "ecd/data"
 	"ecd/data/repository"
 	"ecd/service"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -17,8 +19,14 @@ func main() {
 	r.Use(middleware.Logger)
 	handler := &handler.Handler{}
 
-	dsn := "host=localhost user=Admin password=Admin1232 dbname=ecd port=5432 sslmode=disable TimeZone=Europe/Amsterdam"
-	db, err := database.InitDB(dsn)
+	config, err := config.LoadConfig(".env")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+	log.Printf("Configuration loaded: DatabaseDSN=%s, ServerPort=%s", config.DatabaseDSN, config.ServerPort)
+
+	//dsn := "host=localhost user=Admin password=Admin1232 dbname=ecd port=5432 sslmode=disable TimeZone=Europe/Amsterdam"
+	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {
 		panic("Failed to connect to the database: " + err.Error())
 	}

@@ -5,9 +5,8 @@ services:
     ports:
       - 8080:8080
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KEYCLOAK_DATABASE_VENDOR: ${KEYCLOAK_DATABASE_VENDOR}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
     command: start-dev
     volumes:
       - keycloak_data:/opt/keycloak/data 
@@ -37,16 +36,16 @@ services:
     networks:
       - app-network
 
-  productservice:
+  product-service:
     build:
-      context: ./productservice
+      context: ./product
       dockerfile: Dockerfile
-    container_name: ProductService
+    container_name: product-service
     ports:
       - "8081:8080"
+    env_file:
+    - ./product/.env
     environment:
-      DATABASE_DSN: ${DATABASE_DSN}
-      SERVER_PORT: ${SERVER_PORT}
       DOCKERIZED_ENV: 1
     depends_on:
       postgres:
@@ -76,13 +75,30 @@ services:
     container_name: behoeftebepaling-service
     ports:
       - "8083:8080" 
-    environment:
-      DOCKERIZED_ENV: 1
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - app-network
+  #   environment:
+  #     DOCKERIZED_ENV: 1
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+
+  # recommendation-service:
+  #     build:
+  #       context: ./recommendation
+  #       dockerfile: Dockerfile
+  #     container_name: recommendation-service
+  #     ports:
+  #       - "8084:8080"
+  #     env_file:
+  #     - ./recommendation/.env
+  #     environment:
+  #       DOCKERIZED_ENV: 1
+  #     depends_on:
+  #       postgres:
+  #         condition: service_healthy
+  #     networks:
+  #       - app-network
 
 networks:
   app-network:

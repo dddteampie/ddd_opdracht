@@ -57,7 +57,7 @@ services:
     build:
       context: ./ecd
       dockerfile: Dockerfile
-    container_name: ECDService
+    container_name: ecd-service
     ports:
       - "8082:8082"
     env_file:

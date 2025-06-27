@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"productservice/data_access/data_objects"
+	models "product/model"
 	"strconv"
 	"strings"
 
@@ -20,7 +20,7 @@ func HaalProductLeveraarsOp(w http.ResponseWriter, r *http.Request) {
 	eanStr := r.URL.Query().Get("ean")
 	ean, _ := strconv.Atoi(eanStr)
 
-	var aanboden []data_objects.ProductAanbod
+	var aanboden []models.ProductAanbod
 	if err := DB.Where("product_ean = ?", ean).Find(&aanboden).Error; err != nil {
 		http.Error(w, "Database fout", http.StatusInternalServerError)
 		return
@@ -36,7 +36,7 @@ func HaalProductLeveraarsOp(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var leveranciers []data_objects.Supplier
+	var leveranciers []models.Supplier
 	if err := DB.Where("id IN ?", leverancierIDs).Find(&leveranciers).Error; err != nil {
 		http.Error(w, "Leveranciers ophalen mislukt", http.StatusInternalServerError)
 		return
@@ -50,9 +50,9 @@ func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
 	budgetStr := r.URL.Query().Get("budget")
 	budget, _ := strconv.Atoi(budgetStr)
 
-	var producten []data_objects.Product
+	var producten []models.Product
 
-	query := DB.Model(&data_objects.Product{}).
+	query := DB.Model(&models.Product{}).
 		Joins("JOIN product_aanbods ON product_aanbods.product_ean = products.ean").
 		Preload("ProductAanbod.Supplier").
 		Preload("Tags").
@@ -81,13 +81,12 @@ func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
 func HaalCategorieenOp(w http.ResponseWriter, r *http.Request) {
 	budget, _ := strconv.Atoi(r.URL.Query().Get("budget"))
 
-	var categorieen []data_objects.Categorie
+	var categorieen []models.Categorie
 	err := DB.Where("price_range <= ?", budget).Find(&categorieen).Error
 	if err != nil {
 		http.Error(w, "Database fout", http.StatusInternalServerError)
 		return
 	}
-
 	json.NewEncoder(w).Encode(categorieen)
 }
 
@@ -97,7 +96,7 @@ func PlaatsReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newReview data_objects.Review
+	var newReview models.Review
 	err := json.NewDecoder(r.Body).Decode(&newReview)
 	if err != nil {
 		http.Error(w, "Ongeldige review data: "+err.Error(), http.StatusBadRequest)
@@ -125,7 +124,7 @@ func VoegNieuwProductToe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newProduct data_objects.Product
+	var newProduct models.Product
 	err := json.NewDecoder(r.Body).Decode(&newProduct)
 	if err != nil {
 		http.Error(w, "Ongeldige product data: "+err.Error(), http.StatusBadRequest)
@@ -153,7 +152,7 @@ func VoegProductAanbodToe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newOffer data_objects.ProductAanbod
+	var newOffer models.ProductAanbod
 	err := json.NewDecoder(r.Body).Decode(&newOffer)
 	if err != nil {
 		http.Error(w, "Ongeldige aanbod data: "+err.Error(), http.StatusBadRequest)
@@ -165,7 +164,7 @@ func VoegProductAanbodToe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var product data_objects.Product
+	var product models.Product
 	if err := DB.Where("ean = ?", newOffer.ProductEAN).First(&product).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			http.Error(w, "Product met opgegeven EAN niet gevonden", http.StatusNotFound)

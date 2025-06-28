@@ -9,7 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
+
+var DB *gorm.DB
+
+func InitHandlers(db *gorm.DB) {
+	DB = db
+}
 
 var behoeften []models.Behoefte
 

@@ -75,13 +75,15 @@ services:
     container_name: behoeftebepaling-service
     ports:
       - "8083:8080" 
-  #   environment:
-  #     DOCKERIZED_ENV: 1
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
+    env_file:
+    - ./behoeftebepaling/.env
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
 
   # recommendation-service:
   #     build:

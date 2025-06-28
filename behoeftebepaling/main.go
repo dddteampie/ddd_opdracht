@@ -49,10 +49,14 @@ func main() {
     r := mux.NewRouter()
     r.HandleFunc("/behoefte", handlers.CreateBehoefte).Methods("POST")
     r.HandleFunc("/behoefte/onderzoek/{onderzoekId}", handlers.GetBehoefteByOnderzoekID).Methods("GET")
+	r.HandleFunc("/behoefte/client", handlers.GetBehoefteByClientNameAndBirthdate).Methods("POST") 
+    r.HandleFunc("/behoefte/client/{clientId}", handlers.GetBehoefteByClientID).Methods("GET")      
+
     r.HandleFunc("/onderzoek/{onderzoekId}/anamnese", handlers.KoppelAnamneseHandler).Methods("POST")
     r.HandleFunc("/onderzoek/{onderzoekId}/meetresultaat", handlers.KoppelMeetresultaatHandler).Methods("POST")
     r.HandleFunc("/onderzoek/{onderzoekId}/diagnose", handlers.KoppelDiagnoseHandler).Methods("POST")
 
+	
     log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
     log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

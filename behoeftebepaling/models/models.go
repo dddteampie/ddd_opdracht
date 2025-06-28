@@ -20,7 +20,7 @@ type Behoefte struct {
 
 type Client struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Naam          string    `json:"voornaam"`
+	Naam          string    `json:"naam"`
 	Geboortedatum time.Time `json:"geboortedatum"`
 }
 

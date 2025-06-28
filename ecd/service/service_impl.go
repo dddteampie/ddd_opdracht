@@ -9,10 +9,10 @@ import (
 )
 
 type ECDServiceImpl struct {
-	repo *repository.GormRepository
+	repo repository.Repository
 }
 
-func NewECDService(repo *repository.GormRepository) *ECDServiceImpl {
+func NewECDService(repo repository.Repository) *ECDServiceImpl {
 	return &ECDServiceImpl{repo: repo}
 }
 
@@ -24,7 +24,38 @@ func (s *ECDServiceImpl) CreateClient(ctx context.Context, dto dto.ClientDTO) er
 	return s.repo.SaveClient(dto)
 }
 
-// Same pattern for other methods...
 func (s *ECDServiceImpl) GetZorgdossierByClientID(ctx context.Context, clientID uuid.UUID) (*dto.ZorgdossierDTO, error) {
 	return s.repo.GetZorgdossierByClientID(clientID)
+}
+
+func (s *ECDServiceImpl) CreateZorgdossier(ctx context.Context, dto dto.ZorgdossierDTO) error {
+	return s.repo.SaveZorgdossier(dto)
+}
+
+func (s *ECDServiceImpl) CreateOnderzoek(ctx context.Context, dto dto.OnderzoekDTO) error {
+	return s.repo.CreateOnderzoek(dto)
+}
+
+func (s *ECDServiceImpl) AddAnamnese(ctx context.Context, onderzoekId uuid.UUID, anamnese dto.AnamneseDTO) error {
+	return s.repo.AddAnamnese(onderzoekId, anamnese)
+}
+
+func (s *ECDServiceImpl) AddDiagnose(ctx context.Context, onderzoekId uuid.UUID, diagnose dto.DiagnoseDTO) error {
+	return s.repo.AddDiagnose(onderzoekId, diagnose)
+}
+
+func (s *ECDServiceImpl) AddMeetresultaat(ctx context.Context, onderzoekID uuid.UUID, meetresultaat dto.MeetresultaatDTO) error {
+	return s.repo.AddMeetresultaat(onderzoekID, meetresultaat)
+}
+
+func (s *ECDServiceImpl) GetOnderzoekByID(ctx context.Context, onderzoekID uuid.UUID) (*dto.OnderzoekDTO, error) {
+	return s.repo.GetOnderzoekByID(onderzoekID)
+}
+
+func (s *ECDServiceImpl) GetOnderzoekenByZorgdossierID(ctx context.Context, zorgdossierID uuid.UUID) ([]dto.OnderzoekDTO, error) {
+	return s.repo.GetOnderzoekenByZorgdossierID(zorgdossierID)
+}
+
+func (s *ECDServiceImpl) UpdateOnderzoek(ctx context.Context, dto dto.OnderzoekDTO) error {
+	return s.repo.UpdateOnderzoek(dto)
 }

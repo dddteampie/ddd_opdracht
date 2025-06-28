@@ -49,17 +49,47 @@ func (r *GormRepository) CreateOnderzoek(dto dto.OnderzoekDTO) error {
 	return r.db.Create(&model).Error
 }
 
-func (r *GormRepository) AddAnamnese(anamnese dto.AnamneseDTO) error {
+func (r *GormRepository) GetOnderzoekByID(onderzoekID uuid.UUID) (*dto.OnderzoekDTO, error) {
+	var model model.Onderzoek
+	if err := r.db.
+		Preload("Anamnese").
+		Preload("Diagnose").
+		Preload("Meetresultaat").
+		First(&model, "id = ?", onderzoekID).Error; err != nil {
+		return nil, err
+	}
+	dto := ToOnderzoekDTO(model)
+	return &dto, nil
+}
+
+func (r *GormRepository) GetOnderzoekenByZorgdossierID(zorgdossierID uuid.UUID) ([]dto.OnderzoekDTO, error) {
+	var models []model.Onderzoek
+	if err := r.db.Where("zorgdossier_id = ?", zorgdossierID).Find(&models).Error; err != nil {
+		return nil, err
+	}
+	dtos := make([]dto.OnderzoekDTO, len(models))
+	for i, m := range models {
+		dtos[i] = ToOnderzoekDTO(m)
+	}
+	return dtos, nil
+}
+
+func (r *GormRepository) UpdateOnderzoek(dto dto.OnderzoekDTO) error {
+	model := ToOnderzoekModel(dto)
+	return r.db.Save(&model).Error
+}
+
+func (r *GormRepository) AddAnamnese(onderzoekId uuid.UUID, anamnese dto.AnamneseDTO) error {
 	model := ToAnamneseModel(anamnese)
 	return r.db.Create(&model).Error
 }
 
-func (r *GormRepository) AddDiagnose(diagnose dto.DiagnoseDTO) error {
+func (r *GormRepository) AddDiagnose(onderzoekId uuid.UUID, diagnose dto.DiagnoseDTO) error {
 	model := ToDiagnoseModel(diagnose)
 	return r.db.Create(&model).Error
 }
 
-func (r *GormRepository) AddMeetresultaat(meetresultaat dto.MeetresultaatDTO) error {
+func (r *GormRepository) AddMeetresultaat(onderzoekId uuid.UUID, meetresultaat dto.MeetresultaatDTO) error {
 	model := ToMeetresultaatModel(meetresultaat)
 	return r.db.Create(&model).Error
 }

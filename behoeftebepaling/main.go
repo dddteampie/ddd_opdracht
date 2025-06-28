@@ -47,7 +47,6 @@ func main() {
     handlers.InitHandlers(db) // als je dependency injection gebruikt
 
     r := mux.NewRouter()
-    r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
     r.HandleFunc("/behoefte", handlers.CreateBehoefte).Methods("POST")
     r.HandleFunc("/behoefte/onderzoek/{onderzoekId}", handlers.GetBehoefteByOnderzoekID).Methods("GET")
     r.HandleFunc("/onderzoek/{onderzoekId}/anamnese", handlers.KoppelAnamneseHandler).Methods("POST")

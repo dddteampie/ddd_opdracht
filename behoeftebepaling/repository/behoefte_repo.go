@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var dbInstance *gorm.DB
+
 // InitDB initializes the database connection and performs auto-migrations.
 func InitDB(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -30,4 +32,8 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	log.Println("Database auto-migration complete.")
 
 	return db, nil
+}
+
+func DBConnection() *gorm.DB {
+	return dbInstance
 }

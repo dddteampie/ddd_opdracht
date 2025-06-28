@@ -84,7 +84,12 @@ func (h *Handler) CreateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekID, _ := uuid.FromString(chi.URLParam(r, "onderzoekId"))
+	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
+	onderzoekID, err := uuid.FromString(onderzoekIDStr)
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
 	var dto dto.AnamneseDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)

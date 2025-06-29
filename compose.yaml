@@ -85,6 +85,23 @@ services:
     networks:
       - app-network
 
+  aanvraagverwerking-service:
+    build:
+      context: ./aanvraagverwerking
+      dockerfile: Dockerfile
+    container_name: aanvraagverwerking-service
+    ports:
+      - "8085:8080" 
+    env_file:
+    - ./aanvraagverwerking/.env
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
   # recommendation-service:
   #     build:
   #       context: ./recommendation

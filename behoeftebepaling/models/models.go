@@ -6,6 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type VerwerkingStatus string
+
+const (
+	BehoefteDoorgestuurd        VerwerkingStatus = "BehoefteDoorgestuurdNaarVerwerking"
+	BehoefteNogNietDoorgestuurd VerwerkingStatus = "BehoefteNogNietDoorgestuurdNaarVerwerking"
+)
+
 type Behoefte struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	OnderzoekID  uuid.UUID `gorm:"type:uuid" json:"onderzoek_id"`
@@ -14,6 +21,7 @@ type Behoefte struct {
 	Beschrijving string    `json:"beschrijving"`
 	Urgentie     string    `json:"urgentie"`
 	Datum        time.Time `json:"datum"`
+	Status       VerwerkingStatus   `gorm:"type:string" json:"status"`
 	Onderzoek    Onderzoek `gorm:"foreignKey:OnderzoekID;references:ID"`
 	Client       Client    `gorm:"foreignKey:ClientID;references:ID"`
 }
@@ -31,7 +39,6 @@ type Onderzoek struct {
 	EindDatum  time.Time `json:"eind_datum"`
 }
 
-
 type AnamneseDTO struct {
 	Klachten         string `json:"klachten"`
 	Duur_Klachten    string `json:"duur_klachten"`
@@ -48,7 +55,7 @@ type MeetresultaatDTO struct {
 }
 
 type DiagnoseDTO struct {
-	Naam        string    `json:"naam"`
+	Naam         string    `json:"naam"`
 	Beschrijving string    `json:"beschrijving"`
-	Datum      time.Time `json:"datum"`
+	Datum        time.Time `json:"datum"`
 }

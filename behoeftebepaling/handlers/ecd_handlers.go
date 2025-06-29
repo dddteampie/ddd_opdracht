@@ -46,7 +46,7 @@ func KoppelAnamneseHandler(w http.ResponseWriter, r *http.Request) {
     onderzoekId := vars["onderzoekId"]
 
     // Gebruik de service-functie (met retry)
-    ecdURL := "http://ecd-service:8082/api"
+    ecdURL := "http://ecd-service:8080/api"
     err := service.AddAnamneseToECD(ecdURL, onderzoekId, anamnese)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadGateway)
@@ -67,7 +67,7 @@ func KoppelMeetresultaatHandler(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     onderzoekId := vars["onderzoekId"]
 
-    ecdURL := "http://ecd-service:8082/api"
+    ecdURL := "http://ecd-service:8080/api"
     err := service.AddMeetresultaatToECD(ecdURL, onderzoekId, meetresultaat)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadGateway)
@@ -108,7 +108,7 @@ func KoppelDiagnoseHandler(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     onderzoekId := vars["onderzoekId"]
 
-    ecdURL := "http://ecd-service:8082/api"
+    ecdURL := "http://ecd-service:8080/api"
     err := service.AddDiagnoseToECD(ecdURL, onderzoekId, diagnose)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadGateway)

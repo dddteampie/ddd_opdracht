@@ -15,7 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	log.Printf("Configuration loaded: DatabaseDSN=%s, ServerPort=%s", config.DatabaseDSN, config.ServerPort)
+	log.Printf("Configuration loaded")
 
 	//initialize config
 	db, err := product_repo.InitDB(config.DatabaseDSN)

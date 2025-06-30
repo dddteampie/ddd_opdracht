@@ -31,18 +31,18 @@ type OnderzoekDTO struct {
 }
 
 type DiagnoseDTO struct {
-	ID            uuid.UUID `json:"id"`
-	OnderzoekID   uuid.UUID `json:"onderzoek_id"`
-	Diagnosecode  string    `json:"diagnosecode"`
-	Naam          string    `json:"naam"`
-	Toelichting   string    `json:"toelichting"`
-	Datum         time.Time `json:"datum"`
-	Status        string    `json:"status"`
-	Geboortedatum time.Time `json:"geboortedatum"`
+	ID           uuid.UUID `json:"id"`
+	OnderzoekID  uuid.UUID `json:"onderzoek_id"`
+	Diagnosecode string    `json:"diagnosecode"`
+	Naam         string    `json:"naam"`
+	Toelichting  string    `json:"toelichting"`
+	Datum        time.Time `json:"datum"`
+	Status       string    `json:"status"`
 }
 
 type AnamneseDTO struct {
 	ID               uuid.UUID `json:"id"`
+	OnderzoekID      uuid.UUID `json:"onderzoek_id"`
 	Klachten         string    `json:"klachten"`
 	DuurKlachten     string    `json:"duur_klachten"`
 	Medicatiegebruik string    `json:"medicatiegebruik"`
@@ -53,6 +53,7 @@ type AnamneseDTO struct {
 
 type MeetresultaatDTO struct {
 	ID             uuid.UUID `json:"id"`
+	OnderzoekID    uuid.UUID `json:"onderzoek_id"`
 	InstrumentNaam string    `json:"instrument_naam"`
 	Meetwaarde     string    `json:"meetwaarde"`
 	Datum          time.Time `json:"datum"`

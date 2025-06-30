@@ -15,6 +15,8 @@ type ECDService interface {
 	CreateZorgdossier(ctx context.Context, dto dto.ZorgdossierDTO) error
 
 	CreateOnderzoek(ctx context.Context, dto dto.OnderzoekDTO) error
+	GetOnderzoekByID(ctx context.Context, onderzoekID uuid.UUID) (*dto.OnderzoekDTO, error)
+	UpdateOnderzoek(ctx context.Context, dto dto.OnderzoekDTO) error
 	AddAnamnese(ctx context.Context, onderzoekID uuid.UUID, dto dto.AnamneseDTO) error
 	AddMeetresultaat(ctx context.Context, onderzoekID uuid.UUID, dto dto.MeetresultaatDTO) error
 	AddDiagnose(ctx context.Context, onderzoekID uuid.UUID, dto dto.DiagnoseDTO) error

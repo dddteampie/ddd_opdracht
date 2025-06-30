@@ -90,6 +90,7 @@ func ToOnderzoekDTO(m models.Onderzoek) dto.OnderzoekDTO {
 func ToAnamneseModel(dto dto.AnamneseDTO) models.Anamnese {
 	return models.Anamnese{
 		ID:               dto.ID,
+		OnderzoekID:      dto.OnderzoekID,
 		Klachten:         dto.Klachten,
 		DuurKlachten:     dto.DuurKlachten,
 		Medicatiegebruik: dto.Medicatiegebruik,
@@ -102,6 +103,7 @@ func ToAnamneseModel(dto dto.AnamneseDTO) models.Anamnese {
 func ToAnamneseDTO(m models.Anamnese) dto.AnamneseDTO {
 	return dto.AnamneseDTO{
 		ID:               m.ID,
+		OnderzoekID:      m.OnderzoekID,
 		Klachten:         m.Klachten,
 		DuurKlachten:     m.DuurKlachten,
 		Medicatiegebruik: m.Medicatiegebruik,
@@ -113,31 +115,32 @@ func ToAnamneseDTO(m models.Anamnese) dto.AnamneseDTO {
 
 func ToDiagnoseModel(dto dto.DiagnoseDTO) models.Diagnose {
 	return models.Diagnose{
-		ID:            dto.ID,
-		Diagnosecode:  dto.Diagnosecode,
-		Naam:          dto.Naam,
-		Toelichting:   dto.Toelichting,
-		Datum:         dto.Datum,
-		Status:        dto.Status,
-		Geboortedatum: dto.Geboortedatum,
+		ID:           dto.ID,
+		OnderzoekID:  dto.OnderzoekID,
+		Diagnosecode: dto.Diagnosecode,
+		Naam:         dto.Naam,
+		Toelichting:  dto.Toelichting,
+		Datum:        dto.Datum,
+		Status:       dto.Status,
 	}
 }
 
 func ToDiagnoseDTO(m models.Diagnose) dto.DiagnoseDTO {
 	return dto.DiagnoseDTO{
-		ID:            m.ID,
-		Diagnosecode:  m.Diagnosecode,
-		Naam:          m.Naam,
-		Toelichting:   m.Toelichting,
-		Datum:         m.Datum,
-		Status:        m.Status,
-		Geboortedatum: m.Geboortedatum,
+		ID:           m.ID,
+		OnderzoekID:  m.OnderzoekID,
+		Diagnosecode: m.Diagnosecode,
+		Naam:         m.Naam,
+		Toelichting:  m.Toelichting,
+		Datum:        m.Datum,
+		Status:       m.Status,
 	}
 }
 
 func ToMeetresultaatModel(dto dto.MeetresultaatDTO) models.Meetresultaat {
 	return models.Meetresultaat{
 		ID:             dto.ID,
+		OnderzoekID:    dto.OnderzoekID,
 		InstrumentNaam: dto.InstrumentNaam,
 		Meetwaarde:     dto.Meetwaarde,
 		Datum:          dto.Datum,
@@ -148,6 +151,7 @@ func ToMeetresultaatModel(dto dto.MeetresultaatDTO) models.Meetresultaat {
 func ToMeetresultaatDTO(m models.Meetresultaat) dto.MeetresultaatDTO {
 	return dto.MeetresultaatDTO{
 		ID:             m.ID,
+		OnderzoekID:    m.OnderzoekID,
 		InstrumentNaam: m.InstrumentNaam,
 		Meetwaarde:     m.Meetwaarde,
 		Datum:          m.Datum,

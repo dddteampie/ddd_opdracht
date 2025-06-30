@@ -4,6 +4,7 @@ import (
 	"ecd/api/dto"
 	"ecd/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -35,11 +36,20 @@ func (h *Handler) CreateClientHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	dto.ID = uuid.Must(uuid.NewV4()) // Generate a new UUID for the client
+	if dto.Naam == "" || dto.Adres == "" || dto.Geboortedatum.IsZero() {
+		http.Error(w, "missing required fields", http.StatusBadRequest)
+		return
+	}
+
 	if err := h.ECD.CreateClient(r.Context(), dto); err != nil {
 		http.Error(w, "could not create client", http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"clientId": dto.ID,
+	})
 }
 
 func (h *Handler) CreateZorgdossierHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,11 +58,19 @@ func (h *Handler) CreateZorgdossierHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	if dto.ClientID == uuid.Nil {
+		http.Error(w, "client ID is required", http.StatusBadRequest)
+		return
+	}
+	dto.ID = uuid.Must(uuid.NewV4())
 	if err := h.ECD.CreateZorgdossier(r.Context(), dto); err != nil {
 		http.Error(w, "could not create zorgdossier", http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"zorgdossierId": dto.ID,
+	})
 }
 
 func (h *Handler) GetZorgdossierByClientIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,6 +85,7 @@ func (h *Handler) GetZorgdossierByClientIDHandler(w http.ResponseWriter, r *http
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(zorgdossier)
 }
 
@@ -74,13 +93,58 @@ func (h *Handler) CreateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 	var dto dto.OnderzoekDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
+		fmt.Print("Error decoding request body:", err)
 		return
 	}
+	if dto.ZorgdossierID == uuid.Nil {
+		http.Error(w, "zorgdossier ID is required", http.StatusBadRequest)
+		return
+	}
+	dto.ID = uuid.Must(uuid.NewV4())
 	if err := h.ECD.CreateOnderzoek(r.Context(), dto); err != nil {
 		http.Error(w, "could not create onderzoek", http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"onderzoekId": dto.ID,
+	})
+}
+
+func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request) {
+	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
+	onderzoekID, err := uuid.FromString(onderzoekIDStr)
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+	onderzoek, err := h.ECD.GetOnderzoekByID(r.Context(), onderzoekID)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(onderzoek)
+}
+
+func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
+	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
+	onderzoekID, err := uuid.FromString(onderzoekIDStr)
+	if err != nil {
+		http.Error(w, "invalid uuid", http.StatusBadRequest)
+		return
+	}
+	var dto dto.OnderzoekDTO
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	dto.ID = onderzoekID // Ensure the ID is set to the correct onderzoek ID
+	if err := h.ECD.UpdateOnderzoek(r.Context(), dto); err != nil {
+		http.Error(w, "could not update onderzoek", http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +159,7 @@ func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	dto.ID = uuid.Must(uuid.NewV4())
 	if err := h.ECD.AddAnamnese(r.Context(), onderzoekID, dto); err != nil {
 		http.Error(w, "could not add anamnese", http.StatusBadRequest)
 		return

@@ -6,7 +6,6 @@ import (
 	database "ecd/data"
 	"ecd/data/repository"
 	"ecd/service"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -30,10 +29,7 @@ func main() {
 	}
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
-	fmt.Print(service)
-
-	// Swagger docs endpoint
-	r.Get("/swagger/*", http.StripPrefix("/swagger/", http.FileServer(http.Dir("./docs/swagger"))).ServeHTTP)
+	handler.ECD = service
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/health", func(r chi.Router) {
@@ -58,6 +54,8 @@ func main() {
 			r.Post("/{onderzoekId}/anamnese", handler.AddAnamneseHandler)
 			r.Post("/{onderzoekId}/meetresultaat", handler.AddMeetresultaatHandler)
 			r.Post("/{onderzoekId}/diagnose", handler.AddDiagnoseHandler)
+			r.Get("/{onderzoekId}", handler.GetOnderzoekByIDHandler)
+			r.Put("/{onderzoekId}", handler.UpdateOnderzoekHandler)
 		})
 	})
 

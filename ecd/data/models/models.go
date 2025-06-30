@@ -4,9 +4,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gorm.io/gorm"
 )
 
 type Client struct {
+	gorm.Model
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Naam          string    `gorm:"naam"`
 	Adres         string    `gorm:"adres"`
@@ -14,14 +16,16 @@ type Client struct {
 }
 
 type Zorgdossier struct {
+	gorm.Model
 	ID       uuid.UUID `gorm:"type:uuid;primaryKey"`
 	ClientID uuid.UUID `gorm:"type:uuid"`
 	Situatie string    `gorm:"situatie"`
 }
 
 type Onderzoek struct {
+	gorm.Model
 	ID            uuid.UUID       `gorm:"type:uuid;primaryKey"`
-	ZorgdossierID uuid.UUID       `gorm:"type:uuid"`
+	ZorgdossierID uuid.UUID       `gorm:"type:uuid;foreignKey:ZorgdossierID;references:ID"`
 	BeginDatum    time.Time       `gorm:"type:date"`
 	EindDatum     time.Time       `gorm:"type:date"`
 	Diagnose      []Diagnose      `gorm:"foreignKey:OnderzoekID;references:ID"`
@@ -30,6 +34,7 @@ type Onderzoek struct {
 }
 
 type Anamnese struct {
+	gorm.Model
 	ID               uuid.UUID `gorm:"type:uuid;primaryKey"`
 	OnderzoekID      uuid.UUID `gorm:"type:uuid"`
 	Klachten         string    `gorm:"klachten"`
@@ -41,6 +46,7 @@ type Anamnese struct {
 }
 
 type Diagnose struct {
+	gorm.Model
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
 	OnderzoekID   uuid.UUID `gorm:"type:uuid"`
 	Diagnosecode  string    `gorm:"diagnosecode"`
@@ -51,6 +57,7 @@ type Diagnose struct {
 	Geboortedatum time.Time `gorm:"type:date"`
 }
 type Meetresultaat struct {
+	gorm.Model
 	ID             uuid.UUID `gorm:"type:uuid;primaryKey"`
 	OnderzoekID    uuid.UUID `gorm:"type:uuid"`
 	InstrumentNaam string    `gorm:"instrument_naam"`

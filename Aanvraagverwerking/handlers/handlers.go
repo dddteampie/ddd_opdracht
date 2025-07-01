@@ -144,6 +144,8 @@ func StartCategorieAanvraag(w http.ResponseWriter, r *http.Request) {
 	aanvraag.Status = models.WachtenOpCategorieKeuze
 	if err := DB.Save(&aanvraag).Error; err != nil {
 		log.Printf("Fout bij updaten aanvraagstatus: %v", err)
+		http.Error(w, "Fout bij updaten aanvraagstatus", http.StatusInternalServerError)
+		return
 	}
 
 	// OF NOG BETER: ONTVANG GELIJK een response met lijst van categorieën

@@ -47,14 +47,13 @@ type Anamnese struct {
 
 type Diagnose struct {
 	gorm.Model
-	ID            uuid.UUID `gorm:"type:uuid;primaryKey"`
-	OnderzoekID   uuid.UUID `gorm:"type:uuid"`
-	Diagnosecode  string    `gorm:"diagnosecode"`
-	Naam          string    `gorm:"naam"`
-	Toelichting   string    `gorm:"toelichting"`
-	Datum         time.Time `gorm:"type:date"`
-	Status        string    `gorm:"status"`
-	Geboortedatum time.Time `gorm:"type:date"`
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	OnderzoekID  uuid.UUID `gorm:"type:uuid"`
+	Diagnosecode string    `gorm:"diagnosecode"`
+	Naam         string    `gorm:"naam"`
+	Toelichting  string    `gorm:"toelichting"`
+	Datum        time.Time `gorm:"type:date"`
+	Status       string    `gorm:"status"`
 }
 type Meetresultaat struct {
 	gorm.Model

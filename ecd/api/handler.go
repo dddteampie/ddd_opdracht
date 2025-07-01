@@ -16,12 +16,7 @@ type Handler struct {
 }
 
 func (h *Handler) GetClientHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.FromString(idStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var id, err = GetUUIDFromRequest(r, "id")
 	client, err := h.ECD.GetClient(r.Context(), id)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -74,12 +69,7 @@ func (h *Handler) CreateZorgdossierHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) GetZorgdossierByClientIDHandler(w http.ResponseWriter, r *http.Request) {
-	clientIDStr := chi.URLParam(r, "clientId")
-	clientID, err := uuid.FromString(clientIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var clientID, _ = GetUUIDFromRequest(r, "clientId")
 	zorgdossier, err := h.ECD.GetZorgdossierByClientID(r.Context(), clientID)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -112,12 +102,7 @@ func (h *Handler) CreateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
-	onderzoekID, err := uuid.FromString(onderzoekIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
 	onderzoek, err := h.ECD.GetOnderzoekByID(r.Context(), onderzoekID)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -128,12 +113,7 @@ func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
-	onderzoekID, err := uuid.FromString(onderzoekIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
 	var dto dto.OnderzoekDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -148,12 +128,7 @@ func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
-	onderzoekID, err := uuid.FromString(onderzoekIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
 	var dto dto.AnamneseDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -168,12 +143,7 @@ func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddMeetresultaatHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
-	onderzoekID, err := uuid.FromString(onderzoekIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
 	var dto dto.MeetresultaatDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -187,12 +157,7 @@ func (h *Handler) AddMeetresultaatHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) AddDiagnoseHandler(w http.ResponseWriter, r *http.Request) {
-	onderzoekIDStr := chi.URLParam(r, "onderzoekId")
-	onderzoekID, err := uuid.FromString(onderzoekIDStr)
-	if err != nil {
-		http.Error(w, "invalid uuid", http.StatusBadRequest)
-		return
-	}
+	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
 	var dto dto.DiagnoseDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -203,4 +168,16 @@ func (h *Handler) AddDiagnoseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func GetUUIDFromRequest(r *http.Request, id string) (uuid.UUID, error) {
+	idStr := chi.URLParam(r, id)
+	if idStr == "" {
+		return uuid.Nil, fmt.Errorf("id parameter is required")
+	}
+	uuID, err := uuid.FromString(idStr)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid uuid format: %w", err)
+	}
+	return uuID, nil
 }

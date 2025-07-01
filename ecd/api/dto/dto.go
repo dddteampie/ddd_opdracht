@@ -22,7 +22,6 @@ type ZorgdossierDTO struct {
 type OnderzoekDTO struct {
 	ID            uuid.UUID          `json:"id"`
 	ZorgdossierID uuid.UUID          `json:"zorgdossier_id"`
-	Situatie      string             `json:"situatie"`
 	BeginDatum    time.Time          `json:"begin_datum"`
 	EindDatum     time.Time          `json:"eind_datum"`
 	Diagnose      []DiagnoseDTO      `json:"diagnose"`

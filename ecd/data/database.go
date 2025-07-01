@@ -9,8 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var dbInstance *gorm.DB
-
 func InitDB(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -28,10 +26,5 @@ func InitDB(dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)
 	}
 	log.Println("Database auto-migration complete.")
-	dbInstance = db
 	return db, nil
-}
-
-func DBConnection() *gorm.DB {
-	return dbInstance
 }

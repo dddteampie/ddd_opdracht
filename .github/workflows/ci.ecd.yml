@@ -15,14 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # (Optional) Create any missing .env files
-      - name: Create product/.env
+      - name: Create ecd/.env
         run: |
-          mkdir -p product
-          echo "KC_BOOTSTRAP_ADMIN_USERNAME=admin" >> product/.env
-          echo "KC_BOOTSTRAP_ADMIN_PASSWORD=adminpass" >> product/.env
-          echo "POSTGRES_USER=postgres" >> product/.env
-          echo "POSTGRES_PASSWORD=postgres" >> product/.env
+          mkdir -p ecd
+          echo "KC_BOOTSTRAP_ADMIN_USERNAME=admin" >> ecd/.env
+          echo "KC_BOOTSTRAP_ADMIN_PASSWORD=adminpass" >> ecd/.env
+          echo "POSTGRES_USER=postgres" >> ecd/.env
+          echo "POSTGRES_PASSWORD=postgres" >> ecd/.env
+          echo "POSTGRES_DB=ecd" >> ecd/.env
+          echo "DATABASE_DSN=host=postgres user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} port=5432 sslmode=disable TimeZone=Europe/Amsterdam >> ecd/.env"
 
       - name: Set up Docker Compose
         run: docker compose -f 'ecd/compose.yaml' --env-file 'CI.env' up -d --build

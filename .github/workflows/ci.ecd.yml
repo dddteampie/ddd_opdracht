@@ -1,0 +1,49 @@
+name: CI Test ECD
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'ecd/**' ]
+  pull_request:
+    paths: [ 'ecd/**', '.github/workflows/ci.ecd.yml' ]
+  workflow_dispatch:
+
+jobs:
+  Run_Postman_Tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker compose -f 'ecd/compose.yaml' --env-file CI.env up -d --build 
+
+      - name: Install Newman (Postman CLI)
+        run: |
+          if ! command -v newman &> /dev/null; then
+            npm install -g newman
+          else
+            echo "Newman is already installed"
+          fi
+
+      - name: Wait for ECD service
+        run: |
+          for i in {1..10}; do
+            if curl -sf http://127.0.0.1:8082/api/health; then
+              echo "Service is up!"
+              exit 0
+            fi
+            echo "Waiting for service..."
+            sleep 2
+          done
+          echo "Service did not start in time"
+          docker compose -f ecd/compose.yaml ps -a
+          docker compose -f ecd/compose.yaml logs ecd-service
+          exit 1
+
+      - name: Run Postman tests
+        run: newman run ecd/tests/ECD.tests.postman_collection.json
+
+      - name: Tear down Docker Compose
+        if: always()
+        run: docker compose -f 'ecd/compose.yaml' down --remove-orphans --volumes

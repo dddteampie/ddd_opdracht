@@ -1,0 +1,36 @@
+name: CI Test ECD
+
+on:
+    push:
+        branches: [ main ]
+        paths:
+            - 'ecd/**'
+    pull_request:
+        paths:
+            - 'ecd/**'
+    workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          docker compose ps
+
+      - name: Install Newman (Postman CLI)
+        run: npm install -g newman
+
+      - name: Run Postman tests
+        run: |
+          newman run test/ECD.tests.postman_collection.json
+
+      - name: Tear down Docker Compose
+        if: always()
+        run: docker compose down

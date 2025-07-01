@@ -36,8 +36,6 @@ func CreateBehoefte(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//ecdURL := "http://ecd-service:8082/api"
-
 	// // 1. Check of client bestaat in ECD
 	// exists, err := service.ClientExistsInECD(ecdURL, behoefte.ClientID.String())
 	// if err != nil {

@@ -36,7 +36,6 @@ func LoadConfigFromEnv() (*Config, error) {
 	cfg := &Config{}
 
 	if dsn := os.Getenv("DATABASE_DSN"); dsn != "" {
-		log.Print(dsn)
 		cfg.DatabaseDSN = dsn
 	}
 	if serverPort := os.Getenv("SERVER_PORT"); serverPort != "" {

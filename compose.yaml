@@ -61,7 +61,7 @@ services:
     ports:
       - "8082:8082"
     env_file:
-    - ./ecd/.env
+    - ./ecd/ecd.env
     environment:
       DOCKERIZED_ENV: 1
     depends_on:

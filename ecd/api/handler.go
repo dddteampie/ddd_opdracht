@@ -17,6 +17,10 @@ type Handler struct {
 
 func (h *Handler) GetClientHandler(w http.ResponseWriter, r *http.Request) {
 	var id, err = GetUUIDFromRequest(r, "id")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	client, err := h.ECD.GetClient(r.Context(), id)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -69,7 +73,11 @@ func (h *Handler) CreateZorgdossierHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) GetZorgdossierByClientIDHandler(w http.ResponseWriter, r *http.Request) {
-	var clientID, _ = GetUUIDFromRequest(r, "clientId")
+	var clientID, err = GetUUIDFromRequest(r, "clientId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	zorgdossier, err := h.ECD.GetZorgdossierByClientID(r.Context(), clientID)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -103,6 +111,10 @@ func (h *Handler) CreateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request) {
 	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	onderzoek, err := h.ECD.GetOnderzoekByID(r.Context(), onderzoekID)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
@@ -113,7 +125,11 @@ func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
-	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
+	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	var dto dto.OnderzoekDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -128,7 +144,11 @@ func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
-	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
+	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	var dto dto.AnamneseDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -143,12 +163,17 @@ func (h *Handler) AddAnamneseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddMeetresultaatHandler(w http.ResponseWriter, r *http.Request) {
-	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
+	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	var dto dto.MeetresultaatDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	dto.ID = uuid.Must(uuid.NewV4())
 	if err := h.ECD.AddMeetresultaat(r.Context(), onderzoekID, dto); err != nil {
 		http.Error(w, "could not add meetresultaat", http.StatusBadRequest)
 		return
@@ -157,12 +182,17 @@ func (h *Handler) AddMeetresultaatHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) AddDiagnoseHandler(w http.ResponseWriter, r *http.Request) {
-	var onderzoekID, _ = GetUUIDFromRequest(r, "onderzoekId")
+	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 	var dto dto.DiagnoseDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+	dto.ID = uuid.Must(uuid.NewV4())
 	if err := h.ECD.AddDiagnose(r.Context(), onderzoekID, dto); err != nil {
 		http.Error(w, "could not add diagnose", http.StatusBadRequest)
 		return

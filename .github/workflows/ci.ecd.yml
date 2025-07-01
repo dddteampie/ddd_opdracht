@@ -23,16 +23,19 @@ jobs:
       - name: Install Newman (Postman CLI)
         run: npm install -g newman
 
-      - name: Wait for API to be ready
+      - name: Wait for ECD service
         run: |
-            for i in {1..30}; do
-            if curl -s http://127.0.0.1:8082/api/health; then
-                echo "Service is up!"
-                break
-            fi
-            echo "Waiting for service..."
-            sleep 2
+            for i in {1..60}; do
+                if curl -sf http://127.0.0.1:8082/api/health; then
+                    echo "Service is up!"
+                    exit 0
+                fi
+                echo "Waiting for service..."
+                sleep 2
             done
+            echo "Service did not start in time"
+            docker-compose logs ecd-service
+            exit 1
 
       - name: Run Postman tests
         run: |

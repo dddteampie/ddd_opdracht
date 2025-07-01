@@ -27,8 +27,11 @@ jobs:
 
           echo "SERVER_PORT=:8080" >> ecd/.env
 
+      - name: Check env file
+        run: cat ecd/.env
+
       - name: Set up Docker Compose
-        run: docker compose -f 'ecd/compose.yaml' --env-file 'CI.env' up -d --build
+        run: docker compose -f 'ecd/compose.yaml' --env-file 'ecd/.env' up -d --build
 
       - name: Install Newman (Postman CLI)
         run: |

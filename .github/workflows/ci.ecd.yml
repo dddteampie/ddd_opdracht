@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Postman tests
         run: |
-          newman run ./tests/ECD.tests.postman_collection.json
+          newman run ecd/tests/ECD.tests.postman_collection.json
 
       - name: Tear down Docker Compose
         if: always()

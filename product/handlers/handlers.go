@@ -46,10 +46,6 @@ func HaalProductLeveraarsOp(w http.ResponseWriter, r *http.Request) {
 }
 
 func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
-	tags := strings.Split(r.URL.Query().Get("tags"), ",")
-	budgetStr := r.URL.Query().Get("budget")
-	budget, _ := strconv.Atoi(budgetStr)
-
 	var producten []models.Product
 
 	query := DB.Model(&models.Product{}).
@@ -57,36 +53,117 @@ func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
 		Preload("ProductAanbod.Supplier").
 		Preload("Tags").
 		Preload("Categorieen").
-		Where("product_aanbods.prijs <= ?", budget).
 		Where("products.deleted_at IS NULL")
 
-	if len(tags) > 0 && tags[0] != "" {
-		query = query.
-			Joins("JOIN product_tags ON product_tags.product_id = products.ean").
-			Joins("JOIN tags ON tags.id = product_tags.tag_id").
-			Where("tags.naam IN ?", tags).
-			Group("products.ean").
-			Having("COUNT(DISTINCT tags.naam) = ?", len(tags)) // ensure all tags match
+	eansStr := r.URL.Query().Get("eans")
+	if eansStr != "" {
+		stringEANs := strings.Split(eansStr, ",")
+		var int64EANs []int64
+		for _, sEAN := range stringEANs {
+			ean, err := strconv.ParseInt(strings.TrimSpace(sEAN), 10, 64)
+			if err == nil {
+				int64EANs = append(int64EANs, ean)
+			}
+		}
+		if len(int64EANs) > 0 {
+			query = query.Where("products.ean IN (?)", int64EANs)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode([]models.Product{})
+			return
+		}
+	}
+
+	budgetStr := r.URL.Query().Get("budget")
+	if budgetStr != "" {
+		float_budget, err := strconv.ParseFloat(budgetStr, 64)
+		if err != nil {
+			http.Error(w, "Ongeldige budget-parameter", http.StatusBadRequest)
+			return
+		}
+		budget := int(float_budget)
+		query = query.Where("product_aanbods.prijs <= ?", budget)
+	}
+
+	tagsStr := r.URL.Query().Get("tags")
+	if tagsStr != "" {
+		tags := strings.Split(tagsStr, ",")
+		if len(tags) > 0 && tags[0] != "" {
+			query = query.
+				Joins("JOIN product_tags ON product_tags.product_ean = products.ean").
+				Joins("JOIN tags ON tags.id = product_tags.tag_id").
+				Where("tags.naam IN (?)", tags).
+				Group("products.ean").
+				Having("COUNT(DISTINCT tags.naam) = ?", len(tags))
+		}
+	}
+
+	categorieenStr := r.URL.Query().Get("categorieen")
+	if categorieenStr != "" {
+		categorieIDs := []int{}
+		for _, idStr := range strings.Split(categorieenStr, ",") {
+			id, err := strconv.Atoi(strings.TrimSpace(idStr))
+			if err == nil {
+				categorieIDs = append(categorieIDs, id)
+			}
+		}
+		if len(categorieIDs) > 0 {
+			query = query.
+				Joins("JOIN product_categories ON product_categories.product_ean = products.ean").
+				Where("product_categories.categorie_id IN (?)", categorieIDs)
+		}
 	}
 
 	err := query.Find(&producten).Error
 	if err != nil {
-		http.Error(w, "Database fout", http.StatusInternalServerError)
+		http.Error(w, "Database fout bij ophalen producten: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(producten)
 }
 
 func HaalCategorieenOp(w http.ResponseWriter, r *http.Request) {
-	budget, _ := strconv.Atoi(r.URL.Query().Get("budget"))
-
 	var categorieen []models.Categorie
-	err := DB.Where("price_range <= ?", budget).Find(&categorieen).Error
-	if err != nil {
-		http.Error(w, "Database fout", http.StatusInternalServerError)
+	query := DB.Model(&models.Categorie{})
+
+	budgetStr := r.URL.Query().Get("budget")
+	if budgetStr != "" {
+		float_budget, err := strconv.ParseFloat(budgetStr, 64)
+		if err != nil {
+			http.Error(w, "Ongeldige budget-parameter", http.StatusBadRequest)
+			return
+		}
+		budget := int(float_budget)
+		query = query.Where("price_range <= ?", budget)
+	}
+
+	idsStr := r.URL.Query().Get("ids")
+	if idsStr != "" {
+		stringIDs := strings.Split(idsStr, ",")
+		var intIDs []int
+		for _, sID := range stringIDs {
+			id, err := strconv.Atoi(strings.TrimSpace(sID))
+			if err == nil {
+				intIDs = append(intIDs, id)
+			}
+		}
+		if len(intIDs) > 0 {
+			query = query.Where("id IN (?)", intIDs)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode([]models.Categorie{})
+			return
+		}
+	}
+
+	if err := query.Find(&categorieen).Error; err != nil {
+		http.Error(w, "Database fout bij ophalen categorieën: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(categorieen)
 }
 
@@ -182,4 +259,32 @@ func VoegProductAanbodToe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newOffer)
+}
+func HaalTagsOp(w http.ResponseWriter, r *http.Request) {
+	var tags []models.Tag
+	query := DB.Model(&models.Tag{})
+
+	// Filter op categorieID indien aanwezig
+	categorieIDStr := r.URL.Query().Get("categorieID")
+	if categorieIDStr != "" {
+		categorieID, err := strconv.Atoi(categorieIDStr)
+		if err != nil {
+			http.Error(w, "Ongeldige categorieID-parameter", http.StatusBadRequest)
+			return
+		}
+
+		query = query.
+			Joins("JOIN product_tags ON product_tags.tag_id = tags.id").
+			Joins("JOIN product_categories ON product_categories.product_ean = product_tags.product_ean").
+			Where("product_categories.categorie_id = ?", categorieID).
+			Group("tags.id")
+	}
+
+	if err := query.Find(&tags).Error; err != nil {
+		http.Error(w, "Database fout bij ophalen tags: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tags)
 }

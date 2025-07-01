@@ -44,7 +44,7 @@ services:
     ports:
       - "8081:8080"
     env_file:
-    - ./product/.env
+    - ./product/product.env
     environment:
       DOCKERIZED_ENV: 1
     depends_on:
@@ -83,22 +83,22 @@ services:
     networks:
       - app-network
 
-  # recommendation-service:
-  #     build:
-  #       context: ./recommendation
-  #       dockerfile: Dockerfile
-  #     container_name: recommendation-service
-  #     ports:
-  #       - "8084:8080"
-  #     env_file:
-  #     - ./recommendation/.env
-  #     environment:
-  #       DOCKERIZED_ENV: 1
-  #     depends_on:
-  #       postgres:
-  #         condition: service_healthy
-  #     networks:
-  #       - app-network
+  recommendation-service:
+      build:
+        context: ./recommendation
+        dockerfile: Dockerfile
+      container_name: recommendation-service
+      ports:
+        - "8084:8084"
+      env_file:
+      - ./recommendation/recommendation.env
+      environment:
+        DOCKERIZED_ENV: 1
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - app-network
 
 networks:
   app-network:

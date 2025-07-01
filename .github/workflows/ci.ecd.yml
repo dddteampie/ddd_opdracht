@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths: [ 'ecd/**' ]
   pull_request:
-    paths: [ 'ecd/**' ]
+    paths: [ 'ecd/**', '.github/workflows/ci.ecd.yml' ]
   workflow_dispatch:
 
 jobs:

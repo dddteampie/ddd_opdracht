@@ -22,7 +22,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	log.Printf("Configuration loaded: %+v", config)
 
 	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {

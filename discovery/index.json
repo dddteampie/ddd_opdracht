@@ -1,0 +1,72 @@
+{
+    "version": 1,
+    "default": "local",
+    "environments": [
+        {
+            "key": "local",
+            "display": "Local",
+            "services": {
+                "product": {
+                    "baseUrl": "http://localhost:8081",
+                    "api": {
+                        "url": "http://localhost:8081/api",
+                        "version": {
+                            "current": "v1",
+                            "supported": [
+                                "v1"
+                            ]
+                        }
+                    }
+                },
+                "ecd": {
+                    "baseUrl": "http://localhost:8082",
+                    "api": {
+                        "url": "http://localhost:8082/api",
+                        "version": {
+                            "current": "v1",
+                            "supported": [
+                                "v1"
+                            ]
+                        }
+                    }
+                },
+                "behoeftebepaling": {
+                    "baseUrl": "http://localhost:8083",
+                    "api": {
+                        "url": "http://localhost:8083/api",
+                        "version": {
+                            "current": "v1",
+                            "supported": [
+                                "v1"
+                            ]
+                        }
+                    }
+                },
+                "recommendation": {
+                    "baseUrl": "http://localhost:8084",
+                    "api": {
+                        "url": "http://localhost:8084/api",
+                        "version": {
+                            "current": "v1",
+                            "supported": [
+                                "v1"
+                            ]
+                        }
+                    }
+                },
+                "aanvraagverwerking": {
+                    "baseUrl": "http://localhost:8085",
+                    "api": {
+                        "url": "http://localhost:8085/api",
+                        "version": {
+                            "current": "v1",
+                            "supported": [
+                                "v1"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

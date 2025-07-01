@@ -18,6 +18,10 @@ jobs:
             ecr_repo: ECR_REPO_PRODUCT
           - service: behoeftebepaling
             ecr_repo: ECR_REPO_BEHOEFTEBEPALING
+          - service: aanvraagverwerking
+            ecr_repo: ECR_REPO_AANVRAAGVERWERKING
+          - service: recommendation
+            ecr_repo: ECR_REPO_RECOMMENDATION
 
 
     env:

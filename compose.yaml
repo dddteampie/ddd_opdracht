@@ -105,21 +105,21 @@ services:
       - app-network
 
   recommendation-service:
-      build:
-        context: ./recommendation
-        dockerfile: Dockerfile
-      container_name: recommendation-service
-      ports:
-        - "8084:8084"
-      env_file:
-      - ./recommendation/recommendation.env
-      environment:
-        DOCKERIZED_ENV: 1
-      depends_on:
-        postgres:
-          condition: service_healthy
-      networks:
-        - app-network
+    build:
+      context: ./recommendation
+      dockerfile: Dockerfile
+    container_name: recommendation-service
+    ports:
+      - "8084:8084"
+    env_file:
+    - ./recommendation/recommendation.env
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
 
 networks:
   app-network:

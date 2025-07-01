@@ -48,8 +48,8 @@ jobs:
             sleep 2
           done
           echo "Service did not start in time"
-          docker compose -f ecd/compose.yaml ps
-          docker compose logs ecd-service
+          docker compose -f ecd/compose.yaml ps -a
+          docker compose -f ecd/compose.yaml logs ecd-service
           exit 1
 
       - name: Run Postman tests

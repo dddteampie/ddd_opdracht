@@ -23,12 +23,14 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "behoeftebepaling/handlers"
-    "behoeftebepaling/pkg/config"
-    behoefte_repo "behoeftebepaling/repository"
-    "github.com/gorilla/mux"
+	"behoeftebepaling/handlers"
+	"behoeftebepaling/pkg/config"
+	behoefte_repo "behoeftebepaling/repository"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -37,7 +39,10 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to load configuration: %v", err)
     }
-    log.Printf("Configuration loaded: DatabaseDSN=%s, ServerPort=%s", cfg.DatabaseDSN, cfg.ServerPort)
+    log.Printf("Configuration loaded")
+
+    ecdURL := os.Getenv("ECD_URL") // of uit je eigen config package
+    handlers.SetECDURL(ecdURL)
 
     // Initialize database
     db, err := behoefte_repo.InitDB(cfg.DatabaseDSN)
@@ -56,6 +61,9 @@ func main() {
     r.HandleFunc("/onderzoek/{onderzoekId}/anamnese", handlers.KoppelAnamneseHandler).Methods("POST")
     r.HandleFunc("/onderzoek/{onderzoekId}/meetresultaat", handlers.KoppelMeetresultaatHandler).Methods("POST")
     r.HandleFunc("/onderzoek/{onderzoekId}/diagnose", handlers.KoppelDiagnoseHandler).Methods("POST")
+    r.HandleFunc("/ecd/client", handlers.KoppelClientHandler).Methods("POST")
+    r.HandleFunc("/ecd/zorgdossier", handlers.KoppelZorgdossierHandler).Methods("POST")
+    r.HandleFunc("/ecd/onderzoek", handlers.KoppelOnderzoekHandler).Methods("POST")
 	
     log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
     log.Fatal(http.ListenAndServe(cfg.ServerPort, r))

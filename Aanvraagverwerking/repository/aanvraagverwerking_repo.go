@@ -25,7 +25,7 @@ func InitDB(dsn string) (*gorm.DB, error) {
 		&models.Client{},
 		&models.Behoefte{},
 		&models.Product{},
-		&models.Categorie{},
+		//&models.Categorie{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)

@@ -15,7 +15,7 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to load configuration: %v", err)
     }
-    log.Printf("Configuration loaded: DatabaseDSN=%s, ServerPort=%s", cfg.DatabaseDSN, cfg.ServerPort)
+    log.Printf("Configuration loaded")
 
     // Initialize database
     db, err := aanvraagverwerking_repo.InitDB(cfg.DatabaseDSN)
@@ -26,6 +26,9 @@ func main() {
 
     r := mux.NewRouter()
     r.HandleFunc("/aanvraag", handlers.StartAanvraag).Methods("POST")
+    r.HandleFunc("/aanvraag/{id}", handlers.GetAanvraagByID).Methods("GET")
+    r.HandleFunc("/aanvraag/client/{clientId}", handlers.GetAanvragenByClientID).Methods("GET")
+    r.HandleFunc("/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
 
 	
     log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)

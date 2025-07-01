@@ -21,13 +21,14 @@ type Aanvraag struct {
 	ClientID           uuid.UUID      `gorm:"type:uuid;index" json:"client_id"`
 	BehoefteID         uuid.UUID      `gorm:"type:uuid;index" json:"behoefte_id"` // Referentie naar de Behoefte in de Behoefte Bepaling Service
 	Status             AanvraagStatus `gorm:"type:string" json:"status"`
+	Budget             float64        `json:"budget"`                                      // Budget voor de aanvraag
 	GekozenCategorieID *int           `gorm:"index" json:"gekozen_categorie_id,omitempty"` // Nullable foreign key
 	GekozenProductID   *int           `gorm:"index" json:"gekozen_product_id,omitempty"`   // Nullable foreign key
 
-	Client           Client     `gorm:"foreignKey:ClientID;references:ID"`
-	Behoefte         Behoefte   `gorm:"foreignKey:BehoefteID;references:ID"`
-	GekozenCategorie *Categorie `gorm:"foreignKey:GekozenCategorieID;references:ID"`
-	GekozenProduct   *Product   `gorm:"foreignKey:GekozenProductID;references:EAN"`
+	Client   Client   `gorm:"foreignKey:ClientID;references:ID"`
+	Behoefte Behoefte `gorm:"foreignKey:BehoefteID;references:ID"`
+	//GekozenCategorie *Categorie `gorm:"foreignKey:GekozenCategorieID;references:ID"`
+	//GekozenProduct   *Product   `gorm:"foreignKey:GekozenProductID;references:EAN"`
 }
 
 type Client struct {
@@ -46,23 +47,24 @@ type Behoefte struct {
 }
 
 type Product struct {
-	EAN         int       `gorm:"primaryKey;autoIncrement:false" json:"ean"`
-	Naam        string    `json:"naam"`
-	CategorieID int       `gorm:"index" json:"categorie_id"`
-	Categorie   Categorie `gorm:"foreignKey:CategorieID;references:ID"`
+	EAN         int    `gorm:"primaryKey;autoIncrement:false" json:"ean"`
+	Naam        string `json:"naam"`
+	CategorieID int    `gorm:"index" json:"categorie_id"`
+	//Categorie   Categorie `gorm:"foreignKey:CategorieID;references:ID"`
 }
 
-type Categorie struct {
-	ID   int    `gorm:"primaryKey;autoIncrement:false" json:"id"`
-	Naam string `json:"naam"`
-}
+// type Categorie struct {
+// 	ID   int    `gorm:"primaryKey;autoIncrement:false" json:"id"`
+// 	Naam string `json:"naam"`
+// }
 
 // // --- DTO's voor communicatie met externe services (Recommendation Service) ---
 
-// type CategorieAanvraagDTO struct {
-// 	AanvraagID          uuid.UUID `json:"aanvraag_id"`
-// 	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
-// }
+type CategorieAanvraagDTO struct {
+	ClientID             uuid.UUID `json:"client_id"`
+	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
+	Budget               float64   `json:"budget"`
+}
 
 // type CategorieShortListDTO struct {
 // 	Categorielijst []CategorieDTO `json:"categorie_lijst"`
@@ -73,11 +75,12 @@ type Categorie struct {
 // 	Prijsindicatie int       `json:"prijsindicatie"`
 // }
 
-// type ProductAanvraagDTO struct {
-// 	AanvraagID          uuid.UUID `json:"aanvraag_id"`
-// 	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
-// 	GekozenCategorieID uuid.UUID `json:"gekozen_categorie_id"`
-// }
+type ProductAanvraagDTO struct {
+	ClientID             uuid.UUID `json:"client_id"`
+	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
+	Budget               float64   `json:"budget"`
+	GekozenCategorieID   int       `json:"gekozen_categorie_id"`
+}
 
 // type ProductShortListDTO struct {
 // 	Productlijst []ProductDTO `json:"product_lijst"`

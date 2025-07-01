@@ -205,28 +205,3 @@ func GetBehoefteByClientID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gevondenBehoeften)
 }
-
-// func GetBehoefteByOnderzoekID(w http.ResponseWriter, r *http.Request) {
-//     vars := mux.Vars(r)
-//     onderzoekIDStr := vars["onderzoekId"]
-//     onderzoekID, err := uuid.Parse(onderzoekIDStr)
-//     if err != nil {
-//         http.Error(w, "Ongeldig OnderzoekID", http.StatusBadRequest)
-//         return
-//     }
-
-//     var gevondenBehoeften []models.Behoefte
-//     for _, b := range behoeften {
-//         if b.OnderzoekID == onderzoekID {
-//             gevondenBehoeften = append(gevondenBehoeften, b)
-//         }
-//     }
-
-//     if len(gevondenBehoeften) == 0 {
-//         http.Error(w, "Geen behoeften gevonden voor dit OnderzoekID", http.StatusNotFound)
-//         return
-//     }
-
-//     w.Header().Set("Content-Type", "application/json")
-//     json.NewEncoder(w).Encode(gevondenBehoeften)
-// }

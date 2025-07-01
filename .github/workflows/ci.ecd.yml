@@ -23,6 +23,17 @@ jobs:
       - name: Install Newman (Postman CLI)
         run: npm install -g newman
 
+      - name: Wait for API to be ready
+        run: |
+            for i in {1..30}; do
+            if curl -s http://127.0.0.1:8082/api/health; then
+                echo "Service is up!"
+                break
+            fi
+            echo "Waiting for service..."
+            sleep 2
+            done
+
       - name: Run Postman tests
         run: |
           newman run ecd/tests/ECD.tests.postman_collection.json

@@ -44,7 +44,9 @@ services:
       - "8082:8082"
     environment:
       DOCKERIZED_ENV: 1
-      DATABASE_DSN: host=postgres user=Admin password=Admin1232 dbname=ecd port=5432 sslmode=disable TimeZone=Europe/Amsterdam
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_DSN: host=postgres user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=ecd port=5432 sslmode=disable TimeZone=Europe/Amsterdam      
       SERVER_PORT: :8080
     depends_on:
       postgres:

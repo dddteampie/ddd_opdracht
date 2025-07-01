@@ -1,0 +1,523 @@
+{
+	"info": {
+		"_postman_id": "f09146f8-7fef-4b1b-aaaf-5daf0533d7d0",
+		"name": "ECD.Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38928776"
+	},
+	"item": [
+		{
+			"name": "Health OK",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/health",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Client with invalid uuid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/client/(*U394j`9nSD",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"client",
+						"(*U394j`9nSD"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Client",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"clientId\", pm.response.json().clientId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"naam\": \"John Doe\",\r\n    \"adres\": \"123 Main St, Anytown, USA\",\r\n    \"geboortedatum\": \"1990-01-01T00:00:00Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/client/",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"client",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Client with valid uuid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/client/{{clientId}}",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"client",
+						"{{clientId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Zorgdossier",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"zorgdossierId\", pm.response.json().zorgdossierId);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"client_id\": \"{{clientId}}\",\r\n    \"situatie\": \"Het gaat tot nu toe heel erg slecht met de client, hij moet echt beter zn pillen gaan nemen.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/zorgdossier/",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"zorgdossier",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Zorgdossier by Client ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/zorgdossier/client/{{clientId}}",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"zorgdossier",
+						"client",
+						"{{clientId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Onderzoek",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"onderzoekId\", pm.response.json().onderzoekId);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"zorgdossier_id\": \"{{zorgdossierId}}\",\r\n    \"begin_datum\": \"2010-01-01T00:00:00Z\",\r\n    \"eind_datum\": null,\r\n    \"diagnose\": [],\r\n    \"anamnese\": [],\r\n    \"meetresultaat\": []\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Onderzoek",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"zorgdossier_id\": \"{{zorgdossierId}}\",\r\n    \"begin_datum\": \"2010-01-01T00:00:00Z\",\r\n    \"eind_datum\": \"2025-01-01T00:00:00Z\",\r\n    \"diagnose\": [],\r\n    \"anamnese\": [],\r\n    \"meetresultaat\": []\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/{{onderzoekId}}",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						"{{onderzoekId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Onderzoek by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/{{onderzoekId}}",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						"{{onderzoekId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Anamnese to Onderzoek",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"onderzoek_id\": \"{{onderzoekId}}\",\r\n    \"klachten\": \"Hoofdpijn, buikpijn\",\r\n    \"duur_klachten\": \"2 weken\",\r\n    \"medicatiegebruik\": \"Ibuprofen\",\r\n    \"allergieën\": \"Geen\",\r\n    \"leefstijl\": \"Roker\",\r\n    \"datum\": \"2023-10-01T00:00:00Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/{{onderzoekId}}/anamnese",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						"{{onderzoekId}}",
+						"anamnese"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Diagnose to Onderzoek",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"onderzoek_id\": \"{{onderzoekId}}\",\r\n    \"diagnosecode\": \"F10.120\",\r\n    \"naam\": \"Alcohol abuse with intoxication, uncomplicated\",\r\n   \"toelichting\": \"Alcohol abuse with intoxication, uncomplicated refers to a medical diagnosis where a person is experiencing alcohol intoxication in a manner that is not complicated by other medical conditions or factors. This diagnosis is important for treatment and management, indicating that while the individual is facing issues related to alcohol consumption, there are no additional complications that may affect their health status.\",\r\n    \"datum\": \"2023-10-01T00:00:00Z\",\r\n    \"status\": \"Actief\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/{{onderzoekId}}/diagnose",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						"{{onderzoekId}}",
+						"diagnose"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Meetresultaat to Onderzoek",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": null,\r\n    \"onderzoek_id\": \"{{onderzoekId}}\",\r\n    \"instrument_naam\": \"Thermometer\",\r\n    \"meetwaarde\": \"40,1°C\",\r\n    \"datum\": \"2023-10-01T00:00:00Z\",\r\n    \"uitgevoerd_door\": \"Anisa\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ecd-uri}}/api/onderzoek/{{onderzoekId}}/meetresultaat",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"onderzoek",
+						"{{onderzoekId}}",
+						"meetresultaat"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "ecd-uri",
+			"value": "http://localhost:8082",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": ""
+		},
+		{
+			"key": "zorgdossierId",
+			"value": ""
+		},
+		{
+			"key": "onderzoekId",
+			"value": ""
+		}
+	]
+}

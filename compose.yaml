@@ -61,7 +61,7 @@ services:
     ports:
       - "8082:8082"
     env_file:
-    - ./ecd/.env
+    - ./ecd/ecd.env
     environment:
       DOCKERIZED_ENV: 1
     depends_on:
@@ -78,7 +78,7 @@ services:
     ports:
       - "8083:8080" 
     env_file:
-    - ./behoeftebepaling/.env
+    - ./behoeftebepaling/behoeftebepaling.env
     environment:
       DOCKERIZED_ENV: 1
     depends_on:
@@ -95,7 +95,7 @@ services:
     ports:
       - "8085:8080" 
     env_file:
-    - ./aanvraagverwerking/.env
+    - ./aanvraagverwerking/aanvraagverwerking.env
     environment:
       DOCKERIZED_ENV: 1
     depends_on:
@@ -105,21 +105,21 @@ services:
       - app-network
 
   recommendation-service:
-      build:
-        context: ./recommendation
-        dockerfile: Dockerfile
-      container_name: recommendation-service
-      ports:
-        - "8084:8084"
-      env_file:
-      - ./recommendation/recommendation.env
-      environment:
-        DOCKERIZED_ENV: 1
-      depends_on:
-        postgres:
-          condition: service_healthy
-      networks:
-        - app-network
+    build:
+      context: ./recommendation
+      dockerfile: Dockerfile
+    container_name: recommendation-service
+    ports:
+      - "8084:8084"
+    env_file:
+    - ./recommendation/recommendation.env
+    environment:
+      DOCKERIZED_ENV: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
 
 networks:
   app-network:

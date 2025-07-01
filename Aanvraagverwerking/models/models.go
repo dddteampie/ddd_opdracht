@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 type AanvraagStatus string
@@ -21,9 +22,11 @@ type Aanvraag struct {
 	ClientID           uuid.UUID      `gorm:"type:uuid;index" json:"client_id"`
 	BehoefteID         uuid.UUID      `gorm:"type:uuid;index" json:"behoefte_id"` // Referentie naar de Behoefte in de Behoefte Bepaling Service
 	Status             AanvraagStatus `gorm:"type:string" json:"status"`
-	Budget             float64        `json:"budget"`                                      // Budget voor de aanvraag
-	GekozenCategorieID *int           `gorm:"index" json:"gekozen_categorie_id,omitempty"` // Nullable foreign key
-	GekozenProductID   *int           `gorm:"index" json:"gekozen_product_id,omitempty"`   // Nullable foreign key
+	Budget             float64        `json:"budget"`                                                // Budget voor de aanvraag
+	GekozenCategorieID *int           `gorm:"index" json:"gekozen_categorie_id,omitempty"`           // Nullable foreign key
+	GekozenProductID   *int64         `gorm:"type:bigint;index" json:"gekozen_product_id,omitempty"` // Nullable foreign key
+	CategorieOpties    pq.Int64Array  `gorm:"type:integer[]" json:"categorie_opties,omitempty"`      // Optionele categorieën voor de aanvraag
+	ProductOpties      pq.Int64Array  `gorm:"type:bigint[]" json:"product_opties,omitempty"`         // Optionele producten voor de aanvraag
 
 	Client   Client   `gorm:"foreignKey:ClientID;references:ID"`
 	Behoefte Behoefte `gorm:"foreignKey:BehoefteID;references:ID"`
@@ -35,23 +38,19 @@ type Client struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Naam          string    `json:"naam"`
 	Geboortedatum time.Time `json:"geboortedatum"`
-	// Afhankelijk van wat de Aanvraag Verwerking Service nodig heeft van de client.
-	// Dit kan een subset zijn van de Client in het ECD.
 }
 
 type Behoefte struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Beschrijving string    `json:"beschrijving"`
-	// Deze Behoefte is waarschijnlijk een snapshot of een referentie naar de Behoefte in de Behoefte Bepaling Service.
-	// Het zou hier niet alle details van de Behoefte in de Behoefte Bepaling Service hoeven te bevatten.
 }
 
-type Product struct {
-	EAN         int    `gorm:"primaryKey;autoIncrement:false" json:"ean"`
-	Naam        string `json:"naam"`
-	CategorieID int    `gorm:"index" json:"categorie_id"`
-	//Categorie   Categorie `gorm:"foreignKey:CategorieID;references:ID"`
-}
+// type Product struct {
+// 	EAN         int    `gorm:"primaryKey;autoIncrement:false" json:"ean"`
+// 	Naam        string `json:"naam"`
+// 	CategorieID int    `gorm:"index" json:"categorie_id"`
+// 	Categorie   Categorie `gorm:"foreignKey:CategorieID;references:ID"`
+// }
 
 // type Categorie struct {
 // 	ID   int    `gorm:"primaryKey;autoIncrement:false" json:"id"`
@@ -61,40 +60,40 @@ type Product struct {
 // // --- DTO's voor communicatie met externe services (Recommendation Service) ---
 
 type CategorieAanvraagDTO struct {
-	ClientID             uuid.UUID `json:"client_id"`
-	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
-	Budget               float64   `json:"budget"`
+	ClientID             string  `json:"patientId"`
+	Budget               float64 `json:"budget"`
+	BehoefteBeschrijving string  `json:"behoeften"`
 }
 
-// type CategorieShortListDTO struct {
-// 	Categorielijst []CategorieDTO `json:"categorie_lijst"`
-// }
+type CategorieShortListDTO struct {
+	CategoryIDs    pq.Int64Array  `gorm:"type:integer[]" json:"-"`
+	Categorielijst []CategorieDTO `json:"categories"`
+}
 
-// type CategorieDTO struct {
-// 	Naam         string    `json:"naam"`
-// 	Prijsindicatie int       `json:"prijsindicatie"`
-// }
+type CategorieDTO struct {
+	ID   int    `json:"id"`
+	Naam string `json:"naam"`
+}
 
 type ProductAanvraagDTO struct {
-	ClientID             uuid.UUID `json:"client_id"`
-	BehoefteBeschrijving string    `json:"behoefte_beschrijving"`
-	Budget               float64   `json:"budget"`
-	GekozenCategorieID   int       `json:"gekozen_categorie_id"`
+	ClientID             string  `json:"clientId"`
+	Budget               float64 `json:"budget"`
+	BehoefteBeschrijving string  `json:"behoeften"`
+	GekozenCategorieID   *int    `json:"CategorieID,omitempty"`
 }
 
-// type ProductShortListDTO struct {
-// 	Productlijst []ProductDTO `json:"product_lijst"`
-// }
+type ProductShortListDTO struct {
+	ProductEANs  pq.Int64Array `gorm:"type:bigint[]" json:"-"`
+	Productlijst []ProductDTO  `json:"products"`
+}
 
-// type ProductDTO struct {
-// 	EAN          int `json:"ean"`
-// 	Naam        string `json:"naam"`
-// 	Omschrijving string `json:"omschrijving"`
-// 	Categorie   string `json:"categorie"` // Categorie naam of ID? Volgens UML String
-// }
+type ProductDTO struct {
+	EAN          int64  `json:"ean"`
+	Naam         string `json:"naam"`
+	Omschrijving string `json:"omschrijving"`
+}
 
 // // --- DTO voor communicatie met externe services (Technologie Bestel Service) ---
-
 // type AanvraagBestelDTO struct {
 // 	ClientID        uuid.UUID `json:"client_id"`
 // 	GekozenProductID string    `json:"gekozen_product_id"` // EAN is een string

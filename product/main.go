@@ -11,7 +11,7 @@ import (
 
 func main() {
 	//load correct config
-	config, err := config.LoadConfig(".env")
+	config, err := config.LoadConfig("product.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -24,13 +24,16 @@ func main() {
 	}
 	handlers.InitHandlers(db)
 
-	http.HandleFunc("/product/suppliers", handlers.HaalProductLeveraarsOp)
-	http.HandleFunc("/product", handlers.HaalProductenOp)
-	http.HandleFunc("/categorieen", handlers.HaalCategorieenOp)
-	http.HandleFunc("/review", handlers.PlaatsReview)
-	http.HandleFunc("/product/offer", handlers.VoegProductAanbodToe)
-	http.HandleFunc("/product/add", handlers.VoegNieuwProductToe)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/product/suppliers", handlers.HaalProductLeveraarsOp)
+	mux.HandleFunc("/product", handlers.HaalProductenOp)
+	mux.HandleFunc("/categorieen", handlers.HaalCategorieenOp)
+	mux.HandleFunc("/review", handlers.PlaatsReview)
+	mux.HandleFunc("/product/offer", handlers.VoegProductAanbodToe)
+	mux.HandleFunc("/product/add", handlers.VoegNieuwProductToe)
+	mux.HandleFunc("/categorieen/tags", handlers.HaalTagsOp)
 
 	log.Printf("Product-service draait op %s...", config.ServerPort)
-	log.Fatal(http.ListenAndServe(config.ServerPort, nil))
+	log.Fatal(http.ListenAndServe(config.ServerPort, mux))
 }

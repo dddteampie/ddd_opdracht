@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -29,14 +28,15 @@ type Behoefte struct {
 type Client struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Naam          string    `json:"naam"`
+	Adres         string    `json:"adres"`
 	Geboortedatum time.Time `json:"geboortedatum"`
 }
 
 type Onderzoek struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Situatie   string    `json:"situatie"`
-	BeginDatum time.Time `json:"begin_datum"`
-	EindDatum  time.Time `json:"eind_datum"`
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	ZorgdossierId uuid.UUID `gorm:"type:uuid" json:"zorgdossier_id"`
+	BeginDatum    time.Time `json:"begin_datum"`
+	EindDatum     time.Time `json:"eind_datum"`
 }
 
 type ClientDTO struct {

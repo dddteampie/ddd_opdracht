@@ -3,11 +3,8 @@ package handlers
 import (
 	"behoeftebepaling/models"
 	"behoeftebepaling/service"
-	//"bytes"
 	"encoding/json"
-	//"io"
 	"net/http"
-
 	"github.com/gorilla/mux"
 )
 
@@ -23,13 +20,31 @@ func KoppelClientHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Ongeldige input", http.StatusBadRequest)
         return
     }
-    err := service.CreateClientInECD(ecdURL, client)
+
+    // Maak client aan in ECD en ontvang het ECD-ID
+    ecdID, err := service.CreateClientInECDAndReturnID(ecdURL, client)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadGateway)
         return
     }
+
+    // Sla client op in eigen database met ECD-ID als ID
+    newClient := models.Client{
+        ID:            ecdID,
+        Naam:          client.Naam,
+        Adres:         client.Adres,
+        Geboortedatum: client.Geboortedatum,
+    }
+    if err := DB.Create(&newClient).Error; err != nil {
+        http.Error(w, "Fout bij opslaan client in eigen database: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusCreated)
-    w.Write([]byte("Client succesvol aangemaakt in ECD"))
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "clientId": ecdID,
+    })
 }
 
 func GetClientHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,13 +96,31 @@ func KoppelOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Ongeldige input", http.StatusBadRequest)
         return
     }
-    err := service.CreateOnderzoekInECD(ecdURL, onderzoek)
+
+    // Maak onderzoek aan in ECD en ontvang het ECD-onderzoekID
+    ecdID, err := service.CreateOnderzoekInECDAndReturnID(ecdURL, onderzoek)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadGateway)
         return
     }
+
+    // Sla onderzoek op in eigen database met ECD-ID als ID
+    newOnderzoek := models.Onderzoek{
+        ID:            ecdID,
+        ZorgdossierId: onderzoek.ZorgdossierID,
+        BeginDatum:    onderzoek.BeginDatum,
+        EindDatum:     onderzoek.EindDatum,
+    }
+    if err := DB.Create(&newOnderzoek).Error; err != nil {
+        http.Error(w, "Fout bij opslaan onderzoek in eigen database: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusCreated)
-    w.Write([]byte("Onderzoek succesvol aangemaakt in ECD"))
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "onderzoekId": ecdID,
+    })
 }
 
 func GetOnderzoekByIdHandler(w http.ResponseWriter, r *http.Request) {

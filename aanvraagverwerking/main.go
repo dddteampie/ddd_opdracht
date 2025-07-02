@@ -2,6 +2,7 @@ package main
 
 import (
 	"aanvraagverwerking/handlers"
+	"aanvraagverwerking/pkg/auth"
 	"aanvraagverwerking/pkg/config"
 	aanvraagverwerking_repo "aanvraagverwerking/repository"
 	"log"
@@ -11,32 +12,38 @@ import (
 )
 
 func main() {
-    // Load config from .env
-    cfg, err := config.LoadConfig(".env")
-    if err != nil {
-        log.Fatalf("Failed to load configuration: %v", err)
-    }
-    log.Printf("Configuration loaded")
+	// Load config from .env
+	cfg, err := config.LoadConfig("aanvraagverwerking.env")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+	log.Printf("Configuration loaded")
 
-    // Initialize database
-    db, err := aanvraagverwerking_repo.InitDB(cfg.DatabaseDSN)
-    if err != nil {
-        log.Fatalf("Database initialization failed: %v", err)
-    }
-    handlers.InitHandlers(db) // als je dependency injection gebruikt
+	// Initialize database
+	db, err := aanvraagverwerking_repo.InitDB(cfg.DatabaseDSN)
+	if err != nil {
+		log.Fatalf("Database initialization failed: %v", err)
+	}
+	handlers.InitHandlers(db) // als je dependency injection gebruikt
 
-    r := mux.NewRouter()
-    r.HandleFunc("/aanvraag", handlers.StartAanvraag).Methods("POST")
-    r.HandleFunc("/aanvraag/{id}", handlers.GetAanvraagByID).Methods("GET")
-    r.HandleFunc("/aanvraag/client/{clientId}", handlers.GetAanvragenByClientID).Methods("GET")
+	authConfig := auth.AuthZMiddlewareConfig{
+		RolesClaimName: "realm_access",
+		DevMode:        cfg.AuthzDevMode,
+	}
 
-    r.HandleFunc("/aanvraag/categorie", handlers.StartCategorieAanvraag).Methods("PUT")
-    r.HandleFunc("/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
-    r.HandleFunc("/aanvraag/product", handlers.StartProductAanvraag).Methods("PUT")
-    r.HandleFunc("/aanvraag/product/kies", handlers.KiesProduct).Methods("POST")
+	r := mux.NewRouter()
+	r.Handle("/aanvraag", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartAanvraag))).Methods("POST")
+	r.Handle("/aanvraag/{id}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvraagByID))).Methods("GET")
+	r.Handle("/aanvraag/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvragenByClientID))).Methods("GET")
 
-	r.HandleFunc("/aanvraag/recommendatie/categorie/", handlers.HaalPassendeCategorieenLijstOp).Methods("GET")
-    r.HandleFunc("/aanvraag/recommendatie/product/", handlers.HaalPassendeProductenLijstOp).Methods("GET")
-    log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
-    log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
+	r.Handle("/aanvraag/categorie", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartCategorieAanvraag))).Methods("PUT")
+	r.Handle("/aanvraag/categorie/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesCategorie))).Methods("POST")
+	r.Handle("/aanvraag/product", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartProductAanvraag))).Methods("PUT")
+	r.Handle("/aanvraag/product/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesProduct))).Methods("POST")
+
+	r.Handle("/aanvraag/recommendatie/categorie/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeCategorieenLijstOp))).Methods("GET")
+	r.Handle("/aanvraag/recommendatie/product/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeProductenLijstOp))).Methods("GET")
+	
+	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
+	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

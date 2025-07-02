@@ -19,7 +19,12 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24.4' 
+        go-version: '1.24.4'
+
+    - name: Download Go modules
+      run: go mod tidy
+      working-directory: ./recommendation 
 
     - name: Run Go tests
-      run: go test -v ./recommendation/service/... 
+      run: go test -v ./service/... 
+      working-directory: ./recommendation

@@ -1,4 +1,4 @@
-name: Go CI with PostgreSQL Tests
+name: CI Test Product
 
 on:
   push:
@@ -28,5 +28,5 @@ jobs:
       working-directory: ./product
 
     - name: Run Go tests
-      run: go test -v ./test/...
+      run: go test -v ./tests/...
       working-directory: ./product

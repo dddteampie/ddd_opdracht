@@ -18,13 +18,14 @@ func main() {
 	r.Use(middleware.Logger)
 	handler := &handler.Handler{}
 
-	config, err := config.LoadConfig(".env")
+	config, err := config.LoadConfig("ecd.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {
+		log.Print(config)
 		panic("Failed to connect to the database: " + err.Error())
 	}
 	repository := repository.NewGormRepository(db)

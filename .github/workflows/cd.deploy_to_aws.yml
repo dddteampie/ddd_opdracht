@@ -5,31 +5,9 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy-infra:
-    name: Deploy Infrastructure (CloudFormation)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Deploy CloudFormation stack
-        run: |
-          aws cloudformation deploy \
-            --template-file .github/workflows/infra.yaml \
-            --stack-name smart-care-assist-infra \
-            --capabilities CAPABILITY_NAMED_IAM
-
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
-
-    needs: deploy-infra
 
     strategy:
       matrix:

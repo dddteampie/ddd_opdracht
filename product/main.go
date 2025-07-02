@@ -33,6 +33,7 @@ func main() {
 	mux.HandleFunc("/product/offer", handlers.VoegProductAanbodToe)
 	mux.HandleFunc("/product/add", handlers.VoegNieuwProductToe)
 	mux.HandleFunc("/categorieen/tags", handlers.HaalTagsOp)
+	mux.HandleFunc("/health", handlers.HealthCheckHandler)
 
 	log.Printf("Product-service draait op %s...", config.ServerPort)
 	log.Fatal(http.ListenAndServe(config.ServerPort, mux))

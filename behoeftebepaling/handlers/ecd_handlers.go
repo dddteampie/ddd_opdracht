@@ -32,6 +32,20 @@ func KoppelClientHandler(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte("Client succesvol aangemaakt in ECD"))
 }
 
+func GetClientHandler(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    clientId := vars["clientId"]
+
+    client, err := service.GetClientFromECD(ecdURL, clientId)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadGateway)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(client)
+}
+
 func KoppelZorgdossierHandler(w http.ResponseWriter, r *http.Request) {
     var zorgdossier models.ZorgdossierDTO
     if err := json.NewDecoder(r.Body).Decode(&zorgdossier); err != nil {
@@ -47,6 +61,20 @@ func KoppelZorgdossierHandler(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte("Zorgdossier succesvol aangemaakt in ECD"))
 }
 
+func GetZorgdossierByClientIDHandler(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    client_id := vars["clientId"]
+
+    zorgdossier, err := service.GetZorgdossierFromECD(ecdURL, client_id)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadGateway)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(zorgdossier)
+}
+
 func KoppelOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
     var onderzoek models.OnderzoekDTO
     if err := json.NewDecoder(r.Body).Decode(&onderzoek); err != nil {
@@ -60,6 +88,20 @@ func KoppelOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
     }
     w.WriteHeader(http.StatusCreated)
     w.Write([]byte("Onderzoek succesvol aangemaakt in ECD"))
+}
+
+func GetOnderzoekByIdHandler(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    onderzoekId := vars["onderzoekId"]
+
+    onderzoek, err := service.GetOnderzoekByID(ecdURL, onderzoekId)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadGateway)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(onderzoek)
 }
 
 func KoppelAnamneseHandler(w http.ResponseWriter, r *http.Request) {

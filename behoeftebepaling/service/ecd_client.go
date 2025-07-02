@@ -24,6 +24,25 @@ func AddDiagnoseToECD(ecdURL, onderzoekId string, diagnose models.DiagnoseDTO) e
 	return helper.PostJSONWithRetry(url, diagnose, http.StatusCreated)
 }
 
+func GetClientFromECD(ecdURL string, clientID string) (*models.ClientDTO, error) {
+    url := fmt.Sprintf("%s/client/%s", ecdURL, clientID)
+    resp, err := http.Get(url)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("client ophalen uit ECD mislukt, status: %d", resp.StatusCode)
+    }
+    
+    var client models.ClientDTO
+    if err := json.NewDecoder(resp.Body).Decode(&client); err != nil {
+        return nil, err
+    }
+    
+    return &client, nil
+}
+
 // Check of client bestaat in ECD
 func ClientExistsInECD(ecdURL string, clientID string) (bool, error) {
     url := fmt.Sprintf("%s/client/%s", ecdURL, clientID)
@@ -82,6 +101,25 @@ func CreateZorgdossierInECD(ecdURL string, zorgdossier models.ZorgdossierDTO) er
     return nil
 }
 
+func GetZorgdossierFromECD(ecdURL string, clientID string) (*models.ZorgdossierDTO, error) {
+    url := fmt.Sprintf("%s/zorgdossier/client/%s", ecdURL, clientID)
+    resp, err := http.Get(url)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("zorgdossier ophalen uit ECD mislukt, status: %d", resp.StatusCode)
+    }
+    
+    var zorgdossier models.ZorgdossierDTO
+    if err := json.NewDecoder(resp.Body).Decode(&zorgdossier); err != nil {
+        return nil, err
+    }
+    
+    return &zorgdossier, nil
+}
+
 // Check of onderzoek bestaat
 func OnderzoekExists(ecdURL string, onderzoekID string) (bool, error) {
     url := fmt.Sprintf("%s/onderzoek/%s", ecdURL, onderzoekID)
@@ -109,6 +147,25 @@ func CreateOnderzoekInECD(ecdURL string, onderzoek models.OnderzoekDTO) error {
         return fmt.Errorf("onderzoek aanmaken in ECD mislukt, status: %d", resp.StatusCode)
     }
     return nil
+}
+
+func GetOnderzoekByID(ecdURL string, onderzoekID string) (*models.OnderzoekDTO, error) {
+    url := fmt.Sprintf("%s/onderzoek/%s", ecdURL, onderzoekID)
+    resp, err := http.Get(url)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("onderzoek ophalen uit ECD mislukt, status: %d", resp.StatusCode)
+    }
+    
+    var onderzoek models.OnderzoekDTO
+    if err := json.NewDecoder(resp.Body).Decode(&onderzoek); err != nil {
+        return nil, err
+    }
+    
+    return &onderzoek, nil
 }
 
 // Check of diagnose bestaat voor onderzoek

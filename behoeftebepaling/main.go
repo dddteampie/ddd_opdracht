@@ -2,6 +2,7 @@ package main
 
 import (
 	"behoeftebepaling/handlers"
+	"behoeftebepaling/pkg/auth"
 	"behoeftebepaling/pkg/config"
 	behoefte_repo "behoeftebepaling/repository"
 	"log"
@@ -19,7 +20,7 @@ func main() {
     }
     log.Printf("Configuration loaded")
 
-    ecdURL := os.Getenv("ECD_URL") // of uit je eigen config package
+    ecdURL := os.Getenv("ECD_URL") 
     handlers.SetECDURL(ecdURL)
 
     // Initialize database
@@ -27,26 +28,31 @@ func main() {
     if err != nil {
         log.Fatalf("Database initialization failed: %v", err)
     }
-    handlers.InitHandlers(db) // als je dependency injection gebruikt
+    handlers.InitHandlers(db) 
+
+    authConfig := auth.AuthZMiddlewareConfig{
+		RolesClaimName: "realm_access",
+		DevMode:        cfg.AuthzDevMode,
+	}
 
     r := mux.NewRouter()
-    r.HandleFunc("/behoefte", handlers.CreateBehoefte).Methods("POST")
-    r.HandleFunc("/behoefte/onderzoek/{onderzoekId}", handlers.GetBehoefteByOnderzoekID).Methods("GET")
-	r.HandleFunc("/behoefte/client", handlers.GetBehoefteByClientNameAndBirthdate).Methods("POST") 
-    r.HandleFunc("/behoefte/client/{clientId}", handlers.GetBehoefteByClientID).Methods("GET")   
-    r.HandleFunc("/behoefte/{behoefteId}/aanvraagverwerking", handlers.StuurBehoefteNaarAanvraagverwerking).Methods("POST")   
+     r.Handle("/behoefte", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.CreateBehoefte))).Methods("POST")
+    r.Handle("/behoefte/onderzoek/{onderzoekId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByOnderzoekID))).Methods("GET")
+    r.Handle("/behoefte/client", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByClientNameAndBirthdate))).Methods("POST")
+    r.Handle("/behoefte/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByClientID))).Methods("GET")
+    r.Handle("/behoefte/{behoefteId}/aanvraagverwerking", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StuurBehoefteNaarAanvraagverwerking))).Methods("POST")
 
-    r.HandleFunc("/ecd/onderzoek/{onderzoekId}/anamnese", handlers.KoppelAnamneseHandler).Methods("POST")
-    r.HandleFunc("/ecd/onderzoek/{onderzoekId}/meetresultaat", handlers.KoppelMeetresultaatHandler).Methods("POST")
-    r.HandleFunc("/ecd/onderzoek/{onderzoekId}/diagnose", handlers.KoppelDiagnoseHandler).Methods("POST")
+    r.Handle("/ecd/onderzoek/{onderzoekId}/anamnese", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelAnamneseHandler))).Methods("POST")
+    r.Handle("/ecd/onderzoek/{onderzoekId}/meetresultaat", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelMeetresultaatHandler))).Methods("POST")
+    r.Handle("/ecd/onderzoek/{onderzoekId}/diagnose", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelDiagnoseHandler))).Methods("POST")
 
-    r.HandleFunc("/ecd/client", handlers.KoppelClientHandler).Methods("POST")
-    r.HandleFunc("/ecd/client/{clientId}", handlers.GetClientHandler).Methods("GET")
-    r.HandleFunc("/ecd/zorgdossier", handlers.KoppelZorgdossierHandler).Methods("POST")
-    r.HandleFunc("/ecd/zorgdossier/client/{clientId}", handlers.GetZorgdossierByClientIDHandler).Methods("GET")
-    r.HandleFunc("/ecd/onderzoek", handlers.KoppelOnderzoekHandler).Methods("POST")
-    r.HandleFunc("/ecd/onderzoek/{onderzoekId}", handlers.GetOnderzoekByIdHandler).Methods("GET")
-	
+    r.Handle("/ecd/client", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelClientHandler))).Methods("POST")
+    r.Handle("/ecd/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetClientHandler))).Methods("GET")
+    r.Handle("/ecd/zorgdossier", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelZorgdossierHandler))).Methods("POST")
+    r.Handle("/ecd/zorgdossier/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetZorgdossierByClientIDHandler))).Methods("GET")
+    r.Handle("/ecd/onderzoek", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KoppelOnderzoekHandler))).Methods("POST")
+    r.Handle("/ecd/onderzoek/{onderzoekId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetOnderzoekByIdHandler))).Methods("GET")
+
     log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
     log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

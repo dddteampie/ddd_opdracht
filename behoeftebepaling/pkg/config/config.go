@@ -3,13 +3,15 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DatabaseDSN string `json:"database_dsn"`
-	ServerPort  string `json:"server_port"`
+	DatabaseDSN  string `json:"database_dsn"`
+	ServerPort   string `json:"server_port"`
+	AuthzDevMode bool   `json:"AuthzDevMode"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -42,6 +44,9 @@ func LoadConfigFromEnv() (*Config, error) {
 	if serverPort := os.Getenv("SERVER_PORT"); serverPort != "" {
 		cfg.ServerPort = serverPort
 	}
+	if AuthzDevMode := os.Getenv("AuthzDevMode"); AuthzDevMode != "" {
+		cfg.AuthzDevMode, _ = strconv.ParseBool(AuthzDevMode)
+	}
 
 	return cfg, nil
 }
@@ -58,6 +63,7 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg := &Config{}
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
+	cfg.AuthzDevMode, _ = strconv.ParseBool(os.Getenv("AuthzDevMode"))
 
 	if cfg.DatabaseDSN == "" {
 		log.Println("Warning: DATABASE_DSN is not set in the .env file.")

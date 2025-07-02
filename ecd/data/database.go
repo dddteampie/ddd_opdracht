@@ -13,7 +13,7 @@ import (
 func InitDB(dsn string) (*gorm.DB, error) {
 	log.Println("Connecting to PostgreSQL database with", dsn)
 	conn, err := pgx.ParseConfig(dsn)
-	log.Println("Parsed DSN:", conn)
+	log.Println("Parsed DSN:", conn.Host, conn.User, conn.Database, conn.Port, conn.TLSConfig)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)

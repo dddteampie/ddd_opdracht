@@ -35,6 +35,7 @@ func main() {
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/health", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				log.Println("Health check endpoint hit")
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("OK"))
 			})

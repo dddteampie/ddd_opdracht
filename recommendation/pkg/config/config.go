@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,7 @@ type Config struct {
 	DatabaseDSN       string `json:"database_dsn"`
 	ServerPort        string `json:"server_port"`
 	ProductServiceURL string `json:"ProductServiceURL"`
+	AuthzDevMode      bool   `json:"AuthzDevMode"`
 	GeminiKey         string `json:"GeminiKey"`
 }
 
@@ -50,6 +52,9 @@ func LoadConfigFromEnv() (*Config, error) {
 	if GeminiKey := os.Getenv("GeminiKey"); GeminiKey != "" {
 		cfg.GeminiKey = GeminiKey
 	}
+	if AuthzDevMode := os.Getenv("AuthzDevMode"); AuthzDevMode != "" {
+		cfg.AuthzDevMode, _ = strconv.ParseBool(AuthzDevMode)
+	}
 
 	return cfg, nil
 }
@@ -67,6 +72,7 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
 	cfg.ProductServiceURL = os.Getenv("ProductServiceURL")
+	cfg.AuthzDevMode, _ = strconv.ParseBool(os.Getenv("AuthzDevMode"))
 	cfg.GeminiKey = os.Getenv("GeminiKey")
 
 	if cfg.DatabaseDSN == "" {

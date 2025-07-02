@@ -18,15 +18,16 @@ func main() {
 	r.Use(middleware.Logger)
 	handler := &handler.Handler{}
 
-	config, err := config.LoadConfig(".env")
+	config, err := config.LoadConfig("ecd.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {
-		panic("Failed to connect to the database: " + err.Error())
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
 	handler.ECD = service
@@ -34,6 +35,7 @@ func main() {
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/health", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				log.Println("Health check endpoint hit")
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("OK"))
 			})

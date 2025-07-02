@@ -16,6 +16,7 @@ RUN go build -o main main.go
 FROM debian:bookworm-slim
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y curl
 # Copy the binary from the builder stage
 COPY --from=builder /app/main .
 

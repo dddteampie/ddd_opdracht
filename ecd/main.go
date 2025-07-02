@@ -25,10 +25,9 @@ func main() {
 
 	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {
-		log.Print(config.DatabaseDSN)
-		log.Print(err)
-		panic("Failed to connect to the database: " + err.Error())
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
 	handler.ECD = service
@@ -36,6 +35,7 @@ func main() {
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/health", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				log.Println("Health check endpoint hit")
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("OK"))
 			})

@@ -25,7 +25,7 @@ func main() {
 
 	db, err := database.InitDB(config.DatabaseDSN)
 	if err != nil {
-		panic("Failed to connect to the database: " + err.Error())
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
 
 	repository := repository.NewGormRepository(db)

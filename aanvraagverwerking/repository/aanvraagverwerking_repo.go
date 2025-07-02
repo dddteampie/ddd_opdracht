@@ -24,7 +24,7 @@ func InitDB(dsn string) (*gorm.DB, error) {
 		&models.Aanvraag{},
 		&models.Client{},
 		&models.Behoefte{},
-		&models.Product{},
+		//&models.Product{},
 		//&models.Categorie{},
 	)
 	if err != nil {

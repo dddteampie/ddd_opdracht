@@ -1,12 +1,13 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "aanvraagverwerking/handlers"
-    "aanvraagverwerking/pkg/config"
-    aanvraagverwerking_repo "aanvraagverwerking/repository"
-    "github.com/gorilla/mux"
+	"aanvraagverwerking/handlers"
+	"aanvraagverwerking/pkg/config"
+	aanvraagverwerking_repo "aanvraagverwerking/repository"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -28,9 +29,14 @@ func main() {
     r.HandleFunc("/aanvraag", handlers.StartAanvraag).Methods("POST")
     r.HandleFunc("/aanvraag/{id}", handlers.GetAanvraagByID).Methods("GET")
     r.HandleFunc("/aanvraag/client/{clientId}", handlers.GetAanvragenByClientID).Methods("GET")
-    r.HandleFunc("/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
 
-	
+    r.HandleFunc("/aanvraag/categorie", handlers.StartCategorieAanvraag).Methods("PUT")
+    r.HandleFunc("/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
+    r.HandleFunc("/aanvraag/product", handlers.StartProductAanvraag).Methods("PUT")
+    r.HandleFunc("/aanvraag/product/kies", handlers.KiesProduct).Methods("POST")
+
+	r.HandleFunc("/aanvraag/recommendatie/categorie/", handlers.HaalPassendeCategorieenLijstOp).Methods("GET")
+    r.HandleFunc("/aanvraag/recommendatie/product/", handlers.HaalPassendeProductenLijstOp).Methods("GET")
     log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
     log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

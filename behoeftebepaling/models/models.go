@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -29,33 +28,33 @@ type Behoefte struct {
 type Client struct {
 	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Naam          string    `json:"naam"`
+	Adres         string    `json:"adres"`
 	Geboortedatum time.Time `json:"geboortedatum"`
 }
 
 type Onderzoek struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Situatie   string    `json:"situatie"`
-	BeginDatum time.Time `json:"begin_datum"`
-	EindDatum  time.Time `json:"eind_datum"`
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	ZorgdossierId uuid.UUID `gorm:"type:uuid" json:"zorgdossier_id"`
+	BeginDatum    time.Time `json:"begin_datum"`
+	EindDatum     time.Time `json:"eind_datum"`
 }
 
 type ClientDTO struct {
-	ID            uuid.UUID `json:"id"`
+	ID            uuid.UUID `json:"id,omitempty"`
 	Naam          string    `json:"naam"`
 	Adres         string    `json:"adres"`
 	Geboortedatum time.Time `json:"geboortedatum"`
 }
 
 type ZorgdossierDTO struct {
-	ID       uuid.UUID `json:"id"`
+	ID       uuid.UUID `json:"id,omitempty"`
 	ClientID uuid.UUID `json:"client_id"`
 	Situatie string    `json:"situatie"`
 }
 
 type OnderzoekDTO struct {
-	ID            uuid.UUID          `json:"id"`
+	ID            uuid.UUID          `json:"id,omitempty"`
 	ZorgdossierID uuid.UUID          `json:"zorgdossier_id"`
-	Situatie      string             `json:"situatie"`
 	BeginDatum    time.Time          `json:"begin_datum"`
 	EindDatum     time.Time          `json:"eind_datum"`
 	Diagnose      []DiagnoseDTO      `json:"diagnose"`
@@ -64,7 +63,7 @@ type OnderzoekDTO struct {
 }
 
 type AnamneseDTO struct {
-	ID               uuid.UUID `json:"id"`
+	ID               uuid.UUID `json:"id,omitempty"`
 	OnderzoekID      uuid.UUID `json:"onderzoek_id"`
 	Klachten         string    `json:"klachten"`
 	DuurKlachten     string    `json:"duur_klachten"`
@@ -75,14 +74,20 @@ type AnamneseDTO struct {
 }
 
 type MeetresultaatDTO struct {
+	ID             uuid.UUID `json:"id,omitempty"`
+	OnderzoekID    uuid.UUID `json:"onderzoek_id"`
 	InstrumentNaam string    `json:"instrument_naam"`
 	Meetwaarde     string    `json:"meetwaarde"`
-	Beschrijving   string    `json:"beschrijving"`
 	Datum          time.Time `json:"datum"`
+	UitgevoerdDoor string    `json:"uitgevoerd_door"`
 }
 
 type DiagnoseDTO struct {
+	ID           uuid.UUID `json:"id,omitempty"`
+	OnderzoekID  uuid.UUID `json:"onderzoek_id"`
+	Diagnosecode string    `json:"diagnosecode"`
 	Naam         string    `json:"naam"`
-	Beschrijving string    `json:"beschrijving"`
+	Toelichting  string    `json:"toelichting"`
 	Datum        time.Time `json:"datum"`
+	Status       string    `json:"status"`
 }

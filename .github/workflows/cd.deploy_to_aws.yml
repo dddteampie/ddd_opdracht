@@ -54,7 +54,7 @@ jobs:
         env:
           ECR_REPO: ${{ secrets[matrix.ecr_repo] }}
         run: |
-          IMAGE_TAG=$ECR_REPO:${{ github.sha }}
+          IMAGE_TAG=$ECR_REPO:latest
           docker tag ${{ matrix.service }} $IMAGE_TAG
           docker push $IMAGE_TAG
 

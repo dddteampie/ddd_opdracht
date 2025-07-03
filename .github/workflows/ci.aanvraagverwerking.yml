@@ -3,9 +3,9 @@ name: CI Test Aanvraagverwerking
 on:
   push:
     branches: [ main ]
-    paths: [ 'Aanvraagverwerking/**' ]
+    paths: [ 'aanvraagverwerking/**' ]
   pull_request:
-    paths: [ 'Aanvraagverwerking/**', '.github/workflows/ci.aanvraagverwerking.yml' ]
+    paths: [ 'aanvraagverwerking/**', '.github/workflows/ci.aanvraagverwerking.yml' ]
   workflow_dispatch:
 
 jobs:
@@ -23,8 +23,8 @@ jobs:
 
     - name: Download Go modules
       run: go mod tidy
-      working-directory: ./Aanvraagverwerking
+      working-directory: ./aanvraagverwerking
 
     - name: Run Go tests
       run: go test -v ./...
-      working-directory: ./Aanvraagverwerking
+      working-directory: ./aanvraagverwerking

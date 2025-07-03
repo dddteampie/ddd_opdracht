@@ -61,5 +61,5 @@ func main() {
 		})
 	})
 
-	http.ListenAndServe(":8082", r)
+	http.ListenAndServe(config.ServerPort, r)
 }

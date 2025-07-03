@@ -26,18 +26,18 @@ func main() {
 	handlers.InitHandlers(db) // als je dependency injection gebruikt
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/health", handlers.HealthCheckHandler).Methods("GET")
-	r.HandleFunc("/aanvraag", handlers.StartAanvraag).Methods("POST")
-	r.HandleFunc("/aanvraag/{id}", handlers.GetAanvraagByID).Methods("GET")
-	r.HandleFunc("/aanvraag/client/{clientId}", handlers.GetAanvragenByClientID).Methods("GET")
+	r.HandleFunc("/aanvraagverwerking/api/health", handlers.HealthCheckHandler).Methods("GET")
+	r.HandleFunc("/aanvraagverwerking/aanvraag", handlers.StartAanvraag).Methods("POST")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/{id}", handlers.GetAanvraagByID).Methods("GET")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/client/{clientId}", handlers.GetAanvragenByClientID).Methods("GET")
 
-	r.HandleFunc("/aanvraag/categorie", handlers.StartCategorieAanvraag).Methods("PUT")
-	r.HandleFunc("/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
-	r.HandleFunc("/aanvraag/product", handlers.StartProductAanvraag).Methods("PUT")
-	r.HandleFunc("/aanvraag/product/kies", handlers.KiesProduct).Methods("POST")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/categorie", handlers.StartCategorieAanvraag).Methods("PUT")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/categorie/kies", handlers.KiesCategorie).Methods("POST")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/product", handlers.StartProductAanvraag).Methods("PUT")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/product/kies", handlers.KiesProduct).Methods("POST")
 
-	r.HandleFunc("/aanvraag/recommendatie/categorie/", handlers.HaalPassendeCategorieenLijstOp).Methods("GET")
-	r.HandleFunc("/aanvraag/recommendatie/product/", handlers.HaalPassendeProductenLijstOp).Methods("GET")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/recommendatie/categorie/", handlers.HaalPassendeCategorieenLijstOp).Methods("GET")
+	r.HandleFunc("/aanvraagverwerking/aanvraag/recommendatie/product/", handlers.HaalPassendeProductenLijstOp).Methods("GET")
 	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
 	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

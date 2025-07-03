@@ -31,33 +31,34 @@ func main() {
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
 	handler.ECD = service
-
-	r.Route("/api", func(r chi.Router) {
-		r.Route("/health", func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				log.Println("Health check endpoint hit")
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("OK"))
+	r.Route("/ecd", func(r chi.Router) {
+		r.Route("/api", func(r chi.Router) {
+			r.Route("/health", func(r chi.Router) {
+				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+					log.Println("Health check endpoint hit")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte("OK"))
+				})
 			})
-		})
 
-		r.Route("/client", func(r chi.Router) {
-			r.Get("/{id}", handler.GetClientHandler)
-			r.Post("/", handler.CreateClientHandler)
-		})
+			r.Route("/client", func(r chi.Router) {
+				r.Get("/{id}", handler.GetClientHandler)
+				r.Post("/", handler.CreateClientHandler)
+			})
 
-		r.Route("/zorgdossier", func(r chi.Router) {
-			r.Get("/client/{clientId}", handler.GetZorgdossierByClientIDHandler)
-			r.Post("/", handler.CreateZorgdossierHandler)
-		})
+			r.Route("/zorgdossier", func(r chi.Router) {
+				r.Get("/client/{clientId}", handler.GetZorgdossierByClientIDHandler)
+				r.Post("/", handler.CreateZorgdossierHandler)
+			})
 
-		r.Route("/onderzoek", func(r chi.Router) {
-			r.Post("/", handler.CreateOnderzoekHandler)
-			r.Post("/{onderzoekId}/anamnese", handler.AddAnamneseHandler)
-			r.Post("/{onderzoekId}/meetresultaat", handler.AddMeetresultaatHandler)
-			r.Post("/{onderzoekId}/diagnose", handler.AddDiagnoseHandler)
-			r.Get("/{onderzoekId}", handler.GetOnderzoekByIDHandler)
-			r.Put("/{onderzoekId}", handler.UpdateOnderzoekHandler)
+			r.Route("/onderzoek", func(r chi.Router) {
+				r.Post("/", handler.CreateOnderzoekHandler)
+				r.Post("/{onderzoekId}/anamnese", handler.AddAnamneseHandler)
+				r.Post("/{onderzoekId}/meetresultaat", handler.AddMeetresultaatHandler)
+				r.Post("/{onderzoekId}/diagnose", handler.AddDiagnoseHandler)
+				r.Get("/{onderzoekId}", handler.GetOnderzoekByIDHandler)
+				r.Put("/{onderzoekId}", handler.UpdateOnderzoekHandler)
+			})
 		})
 	})
 

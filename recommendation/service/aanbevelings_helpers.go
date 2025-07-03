@@ -1,20 +1,22 @@
+// recommendation/service/recommendation_service.go
 package service
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"recommendation/model"
 	"strconv"
 	"strings"
 	"time"
 
-	"io"
-
 	"gorm.io/gorm"
+
+	"recommendation/model"
 )
 
 type AanbevelingHelpers struct {
@@ -22,16 +24,26 @@ type AanbevelingHelpers struct {
 	categorieenAILijstMaker ICategorieenAILijstMaker
 	oplossingenAILijstMaker IOplossingenAILijstMaker
 	productServiceURL       string
+	httpClient              *http.Client
 }
 
-func NewAanbevelingHelpers(repo IAanbevelingsOpslag, categorieenAILijstMaker ICategorieenAILijstMaker, oplossingenAILijstMaker IOplossingenAILijstMaker, productURL string) IAanbevelingHelpers {
-
+func NewAanbevelingHelpers(
+	repo IAanbevelingsOpslag,
+	categorieenAILijstMaker ICategorieenAILijstMaker,
+	oplossingenAILijstMaker IOplossingenAILijstMaker,
+	productServiceURL string,
+) IAanbevelingHelpers {
 	return &AanbevelingHelpers{
 		repo:                    repo,
 		categorieenAILijstMaker: categorieenAILijstMaker,
 		oplossingenAILijstMaker: oplossingenAILijstMaker,
-		productServiceURL:       productURL,
+		productServiceURL:       productServiceURL,
+		httpClient:              &http.Client{Timeout: 10 * time.Second},
 	}
+}
+
+func (s *AanbevelingHelpers) SetHTTPClient(client *http.Client) {
+	s.httpClient = client
 }
 
 func (s *AanbevelingHelpers) HaalAlleTagsOp(ctx context.Context, categoryID *int) ([]string, error) {
@@ -46,8 +58,7 @@ func (s *AanbevelingHelpers) HaalAlleTagsOp(ctx context.Context, categoryID *int
 		return nil, fmt.Errorf("fout bij aanmaken HTTP-verzoek voor tags: %w", err)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fout bij verzenden HTTP-verzoek naar product service voor tags: %w", err)
 	}
@@ -79,6 +90,7 @@ func (s *AanbevelingHelpers) HaalAlleTagsOp(ctx context.Context, categoryID *int
 	return tagNames, nil
 }
 
+// HaalCategorieënOp haalt categorieën op van de externe product service.
 func (s *AanbevelingHelpers) HaalCategorieënOp(ctx context.Context, budget float64) ([]model.Category, error) {
 	log.Printf("AanbevelingHelpers: Ophalen categorieën van product service met budget: %.2f", budget)
 
@@ -89,19 +101,22 @@ func (s *AanbevelingHelpers) HaalCategorieënOp(ctx context.Context, budget floa
 		return nil, fmt.Errorf("fout bij aanmaken HTTP-verzoek voor categorieën: %w", err)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fout bij verzenden HTTP-verzoek naar product service voor categorieën: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errorBody map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorBody); err != nil {
-			return nil, fmt.Errorf("product service retourneerde foutstatus %d en kon foutbody niet decoderen: %w", resp.StatusCode, err)
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen, kon body niet lezen: %w", resp.StatusCode, readErr)
 		}
-		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieën: %v", resp.StatusCode, errorBody)
+		var errorBody map[string]interface{}
+		if jsonErr := json.Unmarshal(bodyBytes, &errorBody); jsonErr == nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen: %v", resp.StatusCode, errorBody)
+		}
+		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen, response body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var categories []model.Category
@@ -133,19 +148,22 @@ func (s *AanbevelingHelpers) HaalCategorieenOpMetIDs(ctx context.Context, ids []
 		return nil, fmt.Errorf("fout bij aanmaken HTTP-verzoek voor categorieën by ID: %w", err)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fout bij verzenden HTTP-verzoek naar product service voor categorieën by ID: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errorBody map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorBody); err != nil {
-			return nil, fmt.Errorf("product service retourneerde foutstatus %d en kon foutbody niet decoderen voor categorieën by ID: %w", resp.StatusCode, err)
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen by ID, kon body niet lezen: %w", resp.StatusCode, readErr)
 		}
-		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieën by ID: %v", resp.StatusCode, errorBody)
+		var errorBody map[string]interface{}
+		if jsonErr := json.Unmarshal(bodyBytes, &errorBody); jsonErr == nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen by ID: %v", resp.StatusCode, errorBody)
+		}
+		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor categorieen by ID, response body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var categories []model.Category
@@ -175,19 +193,22 @@ func (s *AanbevelingHelpers) HaalProductenOp(ctx context.Context, tags []string,
 		return nil, fmt.Errorf("fout bij aanmaken HTTP-verzoek voor producten: %w", err)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fout bij verzenden HTTP-verzoek naar product service voor producten: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errorBody map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&errorBody); err != nil {
-			return nil, fmt.Errorf("product service retourneerde foutstatus %d en kon foutbody niet decoderen: %w", resp.StatusCode, err)
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor producten, kon body niet lezen: %w", resp.StatusCode, readErr)
 		}
-		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor producten: %v", resp.StatusCode, errorBody)
+		var errorBody map[string]interface{}
+		if jsonErr := json.Unmarshal(bodyBytes, &errorBody); jsonErr == nil {
+			return nil, fmt.Errorf("product service retourneerde foutstatus %d voor producten: %v", resp.StatusCode, errorBody)
+		}
+		return nil, fmt.Errorf("product service retourneerde foutstatus %d voor producten, response body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var products []model.Product
@@ -219,8 +240,7 @@ func (s *AanbevelingHelpers) HaalProductenOpMetEANs(ctx context.Context, eans []
 		return nil, fmt.Errorf("fout bij aanmaken HTTP-verzoek voor producten by EAN: %w", err)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fout bij verzenden HTTP-verzoek naar product service voor producten by EAN: %w", err)
 	}
@@ -276,9 +296,10 @@ func (s *AanbevelingHelpers) MaakPassendeCategorieënLijst(ctx context.Context, 
 
 	if existingRec != nil && existingRec.PassendeCategorieënID != nil {
 		passendeLijst, err = s.repo.HaalPassendeCategorieënLijstOpMetID(ctx, *existingRec.PassendeCategorieënID)
-		if err != nil {
+		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("fout bij ophalen bestaande passende categorieënlijst met ID %d: %w", *existingRec.PassendeCategorieënID, err)
 		}
+
 		if passendeLijst == nil {
 			log.Printf("Waarschuwing: Passende categorieënlijst met ID %d niet gevonden, maar wel gerefereerd. Nieuwe lijst wordt aangemaakt.", *existingRec.PassendeCategorieënID)
 			passendeLijst = &model.PassendeCategorieënLijst{
@@ -287,7 +308,6 @@ func (s *AanbevelingHelpers) MaakPassendeCategorieënLijst(ctx context.Context, 
 			if err := s.repo.MaakPassendeCategorieënLijstDB(ctx, passendeLijst); err != nil {
 				return nil, fmt.Errorf("fout bij opslaan nieuwe passende categorieënlijst na niet gevonden bestaande: %w", err)
 			}
-			log.Printf("Nieuwe passende categorieënlijst aangemaakt met ID: %d", passendeLijst.ID)
 			existingRec.PassendeCategorieënID = &passendeLijst.ID
 		} else {
 			passendeLijst.CategoryIDs = model.ConvertIntSliceToPQInt64Array(selectedCategoryIDs)
@@ -370,8 +390,8 @@ func (s *AanbevelingHelpers) MaakOplossingenLijst(ctx context.Context, clientID 
 		}
 
 		passendeLijstFromDB, err := s.repo.HaalPassendeCategorieënLijstOpMetID(ctx, *existingRec.PassendeCategorieënID)
-		if err != nil {
-			return nil, fmt.Errorf("fout bij ophalen passende categorieën lijst voor cliënt %s: %w", clientID, err)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("fout bij ophalen bestaande passende categorieënlijst voor client %d: %w", *existingRec.PassendeCategorieënID, err)
 		}
 		if passendeLijstFromDB == nil {
 			return nil, fmt.Errorf("passende categorieënlijst met ID %d niet gevonden voor cliënt %s", *existingRec.PassendeCategorieënID, clientID)
@@ -404,7 +424,7 @@ func (s *AanbevelingHelpers) MaakOplossingenLijst(ctx context.Context, clientID 
 
 	if existingRec != nil && existingRec.OplossingenLijstID != nil {
 		oplossingenLijst, err = s.repo.HaalOplossingenLijstOpMetID(ctx, *existingRec.OplossingenLijstID)
-		if err != nil {
+		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("fout bij ophalen bestaande oplossingenlijst met ID %d: %w", *existingRec.OplossingenLijstID, err)
 		}
 		if oplossingenLijst == nil {
@@ -415,7 +435,6 @@ func (s *AanbevelingHelpers) MaakOplossingenLijst(ctx context.Context, clientID 
 			if err := s.repo.MaakOplossingenLijstDB(ctx, oplossingenLijst); err != nil {
 				return nil, fmt.Errorf("fout bij opslaan nieuwe oplossingenlijst na niet gevonden bestaande: %w", err)
 			}
-			log.Printf("Nieuwe oplossingenlijst aangemaakt met ID: %d", oplossingenLijst.ID)
 			existingRec.OplossingenLijstID = &oplossingenLijst.ID
 		} else {
 			oplossingenLijst.ProductEANs = model.ConvertInt64SliceToPQInt64Array(productEANs)
@@ -506,6 +525,9 @@ func (s *AanbevelingHelpers) HaalOplossingenLijstOp(ctx context.Context, clientI
 
 	oplossingenLijstFromDB, err := s.repo.HaalOplossingenLijstOpMetID(ctx, *rec.OplossingenLijstID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("oplossingenlijst met ID %d niet gevonden", *rec.OplossingenLijstID)
+		}
 		return nil, fmt.Errorf("fout bij ophalen oplossingenlijst uit database: %w", err)
 	}
 	if oplossingenLijstFromDB == nil {

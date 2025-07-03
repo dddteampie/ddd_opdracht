@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 	models "recommendation/model"
 )
 
@@ -27,6 +28,7 @@ type IAanbevelingHelpers interface {
 	HaalProductenOp(ctx context.Context, tags []string, budget float64, categorieën []int) ([]models.Product, error)
 	HaalCategorieenOpMetIDs(ctx context.Context, ids []int) ([]models.Category, error)
 	HaalProductenOpMetEANs(ctx context.Context, eans []int) ([]models.Product, error)
+	SetHTTPClient(client *http.Client)
 }
 
 type ICategorieenAILijstMaker interface {

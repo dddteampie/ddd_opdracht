@@ -32,6 +32,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+
 	mux.Handle("/product/suppliers", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalProductLeveraarsOp)))
 	mux.Handle("/product", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalProductenOp)))
 	mux.Handle("/categorieen", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalCategorieenOp)))
@@ -39,6 +40,7 @@ func main() {
 	mux.Handle("/product/offer", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.VoegProductAanbodToe)))
 	mux.Handle("/product/add", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.VoegNieuwProductToe)))
 	mux.Handle("/categorieen/tags", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalTagsOp)))
+  mux.Handle("/health", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HealthCheckHandler)))
 
 	log.Printf("Product-service draait op %s...", config.ServerPort)
 	log.Fatal(http.ListenAndServe(config.ServerPort, mux))

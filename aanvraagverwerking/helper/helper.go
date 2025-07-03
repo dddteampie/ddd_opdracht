@@ -12,6 +12,8 @@ func RandomFloat64Between(min, max float64) float64 {
         return min
     }
 
+    // Zorg ervoor dat de random generator een unieke seed heeft
+    // om willekeurige resultaten te krijgen bij elke aanroep
     r := rand.New(rand.NewSource(time.Now().UnixNano()))
     raw := min + r.Float64()*(max-min)
 

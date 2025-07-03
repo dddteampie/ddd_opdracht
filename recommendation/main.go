@@ -53,7 +53,7 @@ func main() {
 	r.Handle("/recommend/oplossing/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(aanbevelingsHandler.MaakOplossingenLijstHandler))).Methods("PUT")
 	r.Handle("/recommend/categorie/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(aanbevelingsHandler.HaalPassendeCategorieënLijstOpHandler))).Methods("GET")
 	r.Handle("/recommend/oplossing/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(aanbevelingsHandler.HaalOplossingenLijstOpHandler))).Methods("GET")
-	r.HandleFunc("/health", aanbevelingsHandler.HealthCheckHandler).Methods("GET")
+	r.HandleFunc("/api/health", aanbevelingsHandler.HealthCheckHandler).Methods("GET")
 
 	log.Printf("Aanbevelingsservice draait op poort %s", config.ServerPort)
 	log.Fatal(http.ListenAndServe(config.ServerPort, r))

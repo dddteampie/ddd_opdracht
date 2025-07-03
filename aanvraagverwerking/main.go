@@ -31,6 +31,7 @@ func main() {
 		DevMode:        cfg.AuthzDevMode,
 	}
 
+	// Router setup
 	r := mux.NewRouter()
 	r.Handle("/aanvraag", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartAanvraag))).Methods("POST")
 	r.Handle("/aanvraag/{id}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvraagByID))).Methods("GET")

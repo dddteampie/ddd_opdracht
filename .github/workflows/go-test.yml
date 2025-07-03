@@ -2,6 +2,8 @@ name: Go Unit Tests Aanvraagverwerking
 
 on:
   push:
+    branches:
+      - '**'
     paths: ['Aanvraagverwerking/**.go', 'Aanvraagverwerking/go.mod', 'Aanvraagverwerking/go.sum']
   pull_request:
     paths: ['Aanvraagverwerking/**.go', 'Aanvraagverwerking/go.mod', 'Aanvraagverwerking/go.sum']

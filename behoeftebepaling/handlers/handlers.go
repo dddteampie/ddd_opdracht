@@ -5,8 +5,6 @@ import (
 	"behoeftebepaling/service"
 	"encoding/json"
 	"net/http"
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -19,6 +17,7 @@ func InitHandlers(db *gorm.DB) {
 }
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Behoeftebepaling-service is gezond"))
 }

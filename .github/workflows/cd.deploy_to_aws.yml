@@ -14,14 +14,14 @@ jobs:
         include:
           - service: ecd
             ecr_repo: ECR_REPO_ECD
-          # - service: product
-          #   ecr_repo: ECR_REPO_PRODUCT
-          # - service: behoeftebepaling
-          #   ecr_repo: ECR_REPO_BEHOEFTEBEPALING
-          # - service: aanvraagverwerking
-          #   ecr_repo: ECR_REPO_AANVRAAGVERWERKING
-          # - service: recommendation
-          #   ecr_repo: ECR_REPO_RECOMMENDATION
+          - service: product
+            ecr_repo: ECR_REPO_PRODUCT
+          - service: behoeftebepaling
+            ecr_repo: ECR_REPO_BEHOEFTEBEPALING
+          - service: aanvraagverwerking
+            ecr_repo: ECR_REPO_AANVRAAGVERWERKING
+          - service: recommendation
+            ecr_repo: ECR_REPO_RECOMMENDATION
 
 
     env:

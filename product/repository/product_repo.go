@@ -6,8 +6,6 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	models "product/model"
 )
 
 // InitDB initializes the database connection and performs auto-migrations.
@@ -18,21 +16,6 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	}
 
 	log.Println("Successfully connected to PostgreSQL database!")
-
-	// Auto-Migrate models
-	err = db.AutoMigrate(
-		&models.Product{},
-		&models.Categorie{},
-		&models.Specificatie{},
-		&models.Review{},
-		&models.ProductAanbod{},
-		&models.ProductType{},
-		&models.Supplier{},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to auto-migrate database schema: %w", err)
-	}
-	log.Println("Database auto-migration complete.")
 
 	return db, nil
 }

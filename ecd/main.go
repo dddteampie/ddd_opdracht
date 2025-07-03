@@ -61,6 +61,6 @@ func main() {
 			})
 		})
 	})
-
+	log.Printf("ECD service is running on %s...", config.ServerPort)
 	http.ListenAndServe(config.ServerPort, r)
 }

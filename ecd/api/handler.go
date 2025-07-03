@@ -29,6 +29,17 @@ func (h *Handler) GetClientHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(client)
 }
 
+func (h *Handler) GetAllClientsHandler(w http.ResponseWriter, r *http.Request) {
+	clients, err := h.ECD.GetAllClients(r.Context())
+	if err != nil {
+		http.Error(w, "could not retrieve clients", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(clients)
+}
+
 func (h *Handler) CreateClientHandler(w http.ResponseWriter, r *http.Request) {
 	var dto dto.ClientDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {

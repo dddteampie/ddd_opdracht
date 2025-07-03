@@ -25,6 +25,18 @@ func (r *GormRepository) GetClientByID(id uuid.UUID) (*dto.ClientDTO, error) {
 	return &dto, nil
 }
 
+func (r *GormRepository) GetAllClients() ([]dto.ClientDTO, error) {
+	var models []model.Client
+	if err := r.db.Find(&models).Error; err != nil {
+		return nil, err
+	}
+	dtos := make([]dto.ClientDTO, len(models))
+	for i, m := range models {
+		dtos[i] = ToClientDTO(m)
+	}
+	return dtos, nil
+}
+
 func (r *GormRepository) SaveClient(dto dto.ClientDTO) error {
 	model := ToClientModel(dto)
 	return r.db.Create(&model).Error

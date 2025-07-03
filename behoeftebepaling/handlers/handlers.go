@@ -5,7 +5,6 @@ import (
 	"behoeftebepaling/service"
 	"encoding/json"
 	"net/http"
-	"time"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -15,6 +14,12 @@ var DB *gorm.DB
 
 func InitHandlers(db *gorm.DB) {
 	DB = db
+}
+
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Behoeftebepaling-service is gezond"))
 }
 
 // var behoeften []models.Behoefte
@@ -38,11 +43,11 @@ func CreateBehoefte(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "ClientID is verplicht", http.StatusBadRequest)
 		return
 	}
-    var client models.Client
-    if err := DB.First(&client, "id = ?", behoefte.ClientID).Error; err != nil {
-        http.Error(w, "Client bestaat niet", http.StatusBadRequest)
-        return
-    }
+	var client models.Client
+	if err := DB.First(&client, "id = ?", behoefte.ClientID).Error; err != nil {
+		http.Error(w, "Client bestaat niet", http.StatusBadRequest)
+		return
+	}
 
 	// 1. Check of client bestaat in ECD
 	exists, err := service.ClientExistsInECD(ecdURL, behoefte.ClientID.String())
@@ -58,23 +63,23 @@ func CreateBehoefte(w http.ResponseWriter, r *http.Request) {
 	// // 3. Check of onderzoek bestaat
 	exists, err = service.OnderzoekExists(ecdURL, behoefte.OnderzoekID.String())
 	if err != nil {
-	    http.Error(w, "Fout bij controleren onderzoek in ECD", http.StatusBadGateway)
-	    return
+		http.Error(w, "Fout bij controleren onderzoek in ECD", http.StatusBadGateway)
+		return
 	}
 	if !exists {
-	    http.Error(w, "Onderzoek bestaat niet in ECD", http.StatusBadRequest)
-	    return
+		http.Error(w, "Onderzoek bestaat niet in ECD", http.StatusBadRequest)
+		return
 	}
 
 	// // 4. Check of diagnose bestaat voor onderzoek
 	exists, err = service.DiagnoseExistsForOnderzoek(ecdURL, behoefte.OnderzoekID.String())
 	if err != nil {
-	    http.Error(w, "Fout bij controleren diagnose in ECD", http.StatusBadGateway)
-	    return
+		http.Error(w, "Fout bij controleren diagnose in ECD", http.StatusBadGateway)
+		return
 	}
 	if !exists {
-	    http.Error(w, "Onderzoek heeft nog geen diagnose in ECD, behoefte kan nog niet worden gemaakt", http.StatusBadRequest)
-	    return
+		http.Error(w, "Onderzoek heeft nog geen diagnose in ECD, behoefte kan nog niet worden gemaakt", http.StatusBadRequest)
+		return
 	}
 
 	// Alles klopt, sla behoefte op

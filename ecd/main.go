@@ -43,6 +43,7 @@ func main() {
 
 			r.Route("/client", func(r chi.Router) {
 				r.Get("/{id}", handler.GetClientHandler)
+				r.Get("/", handler.GetAllClientsHandler)
 				r.Post("/", handler.CreateClientHandler)
 			})
 

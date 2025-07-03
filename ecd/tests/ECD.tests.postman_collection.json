@@ -504,7 +504,7 @@
 	"variable": [
 		{
 			"key": "ecd-uri",
-			"value": "http://localhost:8082/ecd",
+			"value": "http://localhost:8080/ecd",
 			"type": "string"
 		},
 		{

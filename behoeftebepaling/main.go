@@ -13,12 +13,12 @@ import (
 )
 
 func main() {
-    // Load config from .env
-    cfg, err := config.LoadConfig(".env")
-    if err != nil {
-        log.Fatalf("Failed to load configuration: %v", err)
-    }
-    log.Printf("Configuration loaded")
+	// Load config from .env
+	cfg, err := config.LoadConfig(".env")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+	log.Printf("Configuration loaded")
 
     ecdURL := os.Getenv("ECD_URL") 
     handlers.SetECDURL(ecdURL)
@@ -36,7 +36,8 @@ func main() {
 	}
 
     r := mux.NewRouter()
-     r.Handle("/behoefte", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.CreateBehoefte))).Methods("POST")
+    r.HandleFunc("/api/health", handlers.HealthCheckHandler).Methods("GET")
+    r.Handle("/behoefte", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.CreateBehoefte))).Methods("POST")
     r.Handle("/behoefte/onderzoek/{onderzoekId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByOnderzoekID))).Methods("GET")
     r.Handle("/behoefte/client", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByClientNameAndBirthdate))).Methods("POST")
     r.Handle("/behoefte/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetBehoefteByClientID))).Methods("GET")

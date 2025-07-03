@@ -18,6 +18,11 @@ func InitHandlers(db *gorm.DB) {
 	DB = db
 }
 
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Aanvraagverwerking-service is gezond"))
+}
+
 func GetAanvraagByID(w http.ResponseWriter, r *http.Request) {
 	// Haal de aanvraag ID uit de URL-variabelen
 	vars := mux.Vars(r)

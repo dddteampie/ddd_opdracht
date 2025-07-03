@@ -13,7 +13,7 @@ COPY . .
 # Build the Go application
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main .
 
-FROM alpine:latest
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y curl
 WORKDIR /app

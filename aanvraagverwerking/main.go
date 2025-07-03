@@ -45,6 +45,7 @@ func main() {
 	r.Handle("/aanvraag/recommendatie/categorie/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeCategorieenLijstOp))).Methods("GET")
 	r.Handle("/aanvraag/recommendatie/product/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeProductenLijstOp))).Methods("GET")
 	
+	r.HandleFunc("/api/health", handlers.HealthCheckHandler).Methods("GET")
 	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
 	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

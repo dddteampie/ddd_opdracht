@@ -26,6 +26,21 @@ jobs:
             echo "Newman is already installed"
           fi
 
+      - name: Wait for ECD service
+        run: |
+          for i in {1..10}; do
+            if curl -sf http://127.0.0.1:8080/ecd/api/health; then
+              echo "Service is up!"
+              exit 0
+            fi
+            echo "Waiting for service..."
+            sleep 2
+          done
+          echo "Service did not start in time"
+          docker compose -f ecd/compose.yaml ps -a
+          docker compose -f ecd/compose.yaml logs ecd-service
+          exit 1
+
       - name: Run Postman tests
         run: newman run ecd/tests/ECD.tests.postman_collection.json
 

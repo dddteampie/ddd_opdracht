@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main .
 
 FROM alpine:latest
 
+RUN apt-get update && apt-get install -y curl
 WORKDIR /app
 
 COPY --from=builder /app/main .

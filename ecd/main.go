@@ -9,33 +9,12 @@ import (
 	"log"
 	"net/http"
 
+	middleware_ecd "ecd/api/middleware"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-func corsMiddleware(allowedOrigin string) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestOrigin := r.Header.Get("Origin")
-
-			if allowedOrigin == "*" || requestOrigin == allowedOrigin {
-				w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
-			} else {
-			}
-
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-			w.Header().Set("Access-Control-Max-Age", "86400")
-
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -51,7 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	r.Use(corsMiddleware(config.CorsOrigin))
+	r.Use(middleware_ecd.CorsMiddleware(config.CorsOrigin))
 
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)

@@ -15,7 +15,7 @@ func SetAanvraagverwerkingURL(url string) {
 }
 
 func NotifyAanvraagverwerking(behoefte models.Behoefte, client models.Client) (string, error) {
-	url := fmt.Sprintf("%s/aanvraagverwerking/aanvraag", aanvraagURL)
+	url := fmt.Sprintf("%s/aanvraag", aanvraagURL)
 	payload := map[string]interface{}{
 		"client":   client,
 		"behoefte": behoefte,

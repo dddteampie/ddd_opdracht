@@ -76,6 +76,7 @@ func GetAanvragenByClientID(w http.ResponseWriter, r *http.Request) {
 func StartAanvraag(w http.ResponseWriter, r *http.Request) {
 	// 1. Decodeer de input
 	client, behoefte, err := DecodeAanvraagInput(r)
+	log.Printf("StartAanvraag: client=%+v, behoefte=%+v", client, behoefte)
 	if err != nil {
 		http.Error(w, "Ongeldige input", http.StatusBadRequest)
 		return
@@ -305,8 +306,8 @@ func KiesProduct(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest) // <-- Veranderd naar HTTP 400 Bad Request
 		json.NewEncoder(w).Encode(map[string]string{
-			"error":   "missing_product_ean",                                           
-			"message": "Het 'product_ean' veld is verplicht om een product te kiezen.", 
+			"error":   "missing_product_ean",
+			"message": "Het 'product_ean' veld is verplicht om een product te kiezen.",
 		})
 		return
 	}

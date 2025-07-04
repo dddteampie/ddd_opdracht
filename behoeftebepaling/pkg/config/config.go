@@ -12,6 +12,7 @@ type Config struct {
 	DatabaseDSN  string `json:"database_dsn"`
 	ServerPort   string `json:"server_port"`
 	AuthzDevMode bool   `json:"AuthzDevMode"`
+	AanvraagUrl  string `json:"aanvraag_url"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -48,6 +49,10 @@ func LoadConfigFromEnv() (*Config, error) {
 		cfg.AuthzDevMode, _ = strconv.ParseBool(AuthzDevMode)
 	}
 
+	if AanvraagUrl := os.Getenv("AANVRAAG_URL"); AanvraagUrl != "" {
+		cfg.AanvraagUrl = AanvraagUrl
+	}
+
 	return cfg, nil
 }
 
@@ -70,6 +75,10 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	}
 	if cfg.ServerPort == "" {
 		log.Println("Warning: SERVER_PORT is not set in the .env file.")
+	}
+
+	if cfg.AanvraagUrl == "" {
+		log.Println("Warning: AANVRAAG_URL is not set in the .env file.")
 	}
 
 	return cfg, nil

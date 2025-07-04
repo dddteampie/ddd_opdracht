@@ -7,7 +7,6 @@ import (
 	aanvraagverwerking_repo "aanvraagverwerking/repository"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -20,8 +19,7 @@ func main() {
 	}
 	log.Printf("Configuration loaded")
 
-	recURL := os.Getenv("recURL")
-	handlers.SetRECURL(recURL)
+	handlers.SetRECURL(cfg.RecommendationUrl)
 
 	// Initialize database
 	db, err := aanvraagverwerking_repo.InitDB(cfg.DatabaseDSN)

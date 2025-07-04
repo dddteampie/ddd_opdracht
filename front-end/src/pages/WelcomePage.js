@@ -1,5 +1,3 @@
-import React from 'react';
-
 const WelcomePage = () => {
   return (
     <div style={{
@@ -11,9 +9,8 @@ const WelcomePage = () => {
       textAlign: 'center',
       padding: '20px'
     }}>
-      <h1>Welkom bij jouw Landy SPA!</h1>
-      <p>Dit is een simpele pagina om te laten zien dat je Landy template werkt.</p>
-      <p>Je kunt hier beginnen met het bouwen van je geweldige frontend.</p>
+      <h1>Welkom bij Smart Care Assist</h1>
+      <p>Dit is een applicatie om sneller passende technologiën bij de client te vinden.</p>
     </div>
   );
 };

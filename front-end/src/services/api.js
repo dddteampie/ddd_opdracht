@@ -18,7 +18,7 @@ const getApiBaseUrl = (serviceName) => {
   return url;
 };
 
-const  callApi = async (serviceName, endpoint, options = {}) => {
+const callApi = async (serviceName, endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,

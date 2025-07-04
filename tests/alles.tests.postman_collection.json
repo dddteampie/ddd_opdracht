@@ -989,12 +989,12 @@
     },
     {
       "key": "aanvraagverwerking-uri",
-      "value": "http://localhost:8085",
+      "value": "http://localhost:8085/aanvraagverwerking",
       "type": "string"
     },
     {
       "key": "behoeftebepaling-uri",
-      "value": "http://localhost:8083",
+      "value": "http://localhost:8083/behoeftebepaling",
       "type": "string"
     },
     {

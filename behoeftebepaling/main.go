@@ -4,6 +4,7 @@ import (
 	"behoeftebepaling/handlers"
 	"behoeftebepaling/pkg/auth"
 	"behoeftebepaling/pkg/config"
+    "behoeftebepaling/helper"
 	behoefte_repo "behoeftebepaling/repository"
 	"log"
 	"net/http"
@@ -22,6 +23,9 @@ func main() {
 
     ecdURL := os.Getenv("ECD_URL") 
     handlers.SetECDURL(ecdURL)
+
+    aanvraagURL := os.Getenv("aanvraagURL")
+    helper.SetAanvraagverwerkingURL(aanvraagURL)
 
     // Initialize database
     db, err := behoefte_repo.InitDB(cfg.DatabaseDSN)

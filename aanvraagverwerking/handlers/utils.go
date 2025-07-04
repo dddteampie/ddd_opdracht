@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -16,6 +17,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+var recURL string
+
+func SetRECURL(url string) {
+	recURL = url
+}
 
 // startaanvraag utils
 func DecodeAanvraagInput(r *http.Request) (models.Client, models.Behoefte, error) {
@@ -78,7 +85,7 @@ func StuurCategorieAanvraagNaarRecommendation(input models.CategorieAanvraagDTO)
 	if err != nil {
 		return err
 	}
-	url := "http://recommendation-service:8084/recommend/categorie/"
+	url := fmt.Sprintf("%s/recommend/categorie/", recURL)
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
@@ -104,8 +111,7 @@ func ZetStatusWachtenOpCategorie(db *gorm.DB, aanvraag *models.Aanvraag) error {
 }
 
 func VraagCategorieenLijstOp(patientID string) (models.CategorieShortListDTO, int, error) {
-	recommendationServiceURL := "http://recommendation-service:8084"
-	url := fmt.Sprintf("%s/recommend/categorie/?patientId=%s", recommendationServiceURL, patientID)
+	url := fmt.Sprintf("%s/recommend/categorie/?patientId=%s", recURL, patientID)
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -188,7 +194,7 @@ func stuurProductAanvraagNaarRecommendation(input models.ProductAanvraagDTO) err
 	if err != nil {
 		return fmt.Errorf("fout bij serialiseren JSON: %v", err)
 	}
-	url := "http://recommendation-service:8084/recommend/oplossing/"
+	url := fmt.Sprintf("%s/recommend/oplossing/", recURL)
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
@@ -209,9 +215,8 @@ func stuurProductAanvraagNaarRecommendation(input models.ProductAanvraagDTO) err
 
 // VraagProductenLijstOp utils
 func vraagProductenLijstOp(clientID string) (models.ProductShortListDTO, int, error) {
-	recommendationServiceURL := "http://recommendation-service:8084"
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/recommend/oplossing/?clientId=%s", recommendationServiceURL, clientID)
+	url := fmt.Sprintf("%s/recommend/oplossing/?clientId=%s", recURL, clientID)
 	resp, err := client.Get(url)
 	if err != nil {
 		return models.ProductShortListDTO{}, 0, err
@@ -247,16 +252,16 @@ func koppelProductOptiesAanAanvraag(db *gorm.DB, clientID string, lijst models.P
 
 // KiesProduct utils
 func productToegestaan(productOpties []int64, gekozenEAN int64) bool {
-    for _, ean := range productOpties {
-        if ean == gekozenEAN {
-            return true
-        }
-    }
-    return false
+	for _, ean := range productOpties {
+		if ean == gekozenEAN {
+			return true
+		}
+	}
+	return false
 }
 
 func slaGekozenProductOp(db *gorm.DB, aanvraag *models.Aanvraag, gekozenEAN int64) error {
-    aanvraag.GekozenProductID = &gekozenEAN
-    aanvraag.Status = models.ProductGekozen
-    return db.Save(aanvraag).Error
+	aanvraag.GekozenProductID = &gekozenEAN
+	aanvraag.Status = models.ProductGekozen
+	return db.Save(aanvraag).Error
 }

@@ -11,7 +11,6 @@ import (
 )
 
 var ecdURL string
-
 func SetECDURL(url string) {
 	ecdURL = url
 }

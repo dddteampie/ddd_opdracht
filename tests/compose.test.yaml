@@ -38,7 +38,7 @@ services:
 
   product-service:
     build:
-      context: ./product
+      context: ../product
       dockerfile: Dockerfile
     container_name: product-service
     ports:
@@ -57,7 +57,7 @@ services:
 
   ecd-service:
     build:
-      context: ./ecd
+      context: ../ecd
       dockerfile: Dockerfile
     container_name: ecd-service
     ports:
@@ -76,7 +76,7 @@ services:
 
   behoeftebepaling-service:
     build:
-      context: ./behoeftebepaling
+      context: ../behoeftebepaling
       dockerfile: Dockerfile
     container_name: behoeftebepaling-service
     ports:
@@ -95,7 +95,7 @@ services:
 
   aanvraagverwerking-service:
     build:
-      context: ./aanvraagverwerking
+      context: ../aanvraagverwerking
       dockerfile: Dockerfile
     container_name: aanvraagverwerking-service
     ports:
@@ -114,7 +114,7 @@ services:
 
   recommendation-service:
     build:
-      context: ./recommendation
+      context: ../recommendation
       dockerfile: Dockerfile
     container_name: recommendation-service
     ports:

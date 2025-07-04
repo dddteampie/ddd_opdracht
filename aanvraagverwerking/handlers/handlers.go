@@ -130,7 +130,7 @@ func StartCategorieAanvraag(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Fout bij serialiseren JSON", http.StatusInternalServerError)
 		return
 	}
-	url := "http://recommendation-service:8084/recommend/categorie/"
+	url := "http://host.docker.internal:8084/recommend/categorie/"
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
@@ -313,7 +313,7 @@ func StartProductAanvraag(w http.ResponseWriter, r *http.Request) {
 }
 
 func HaalPassendeProductenLijstOp(w http.ResponseWriter, r *http.Request) {
-	recommendationServiceURL := "http://recommendation-service:8084"
+	recommendationServiceURL := "http://host.docker.internal:8084"
 	ClientID := r.URL.Query().Get("clientId")
 	if ClientID == "" {
 		http.Error(w, "ClientId is verplicht", http.StatusBadRequest)

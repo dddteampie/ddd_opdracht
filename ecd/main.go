@@ -66,7 +66,6 @@ func main() {
 				r.Get("/dossier/{dossierId}", handler.GetOnderzoekByDossierIdHandler)
 			})
 		})
-
 	})
 	log.Printf("ECD service is running on %s...", config.ServerPort)
 	http.ListenAndServe(config.ServerPort, r)

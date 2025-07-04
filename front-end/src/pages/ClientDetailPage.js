@@ -21,7 +21,7 @@ const ClientDetailPage = () => {
     const [client, setClient] = useState(null);
     const [zorgdossier, setZorgdossier] = useState(null);
     const [onderzoek, setOnderzoek] = useState(null);
-    const [diagnose, setDiagnose] = useState(null); // Deze state wordt nu ALLEEN gevuld bij SUCCESVOLLE submit van diagnoseformulier
+    const [diagnose, setDiagnose] = useState(null);
     const [loading, setLoading] = useState(true);
     const [zorgdossierForm] = Form.useForm();
     const [onderzoekForm] = Form.useForm();
@@ -36,34 +36,43 @@ const ClientDetailPage = () => {
             if (!fetchedClient) {
                 message.error("Cliënt niet gevonden.");
                 setClient(null);
-                setLoading(false);
                 return;
             }
             setClient(fetchedClient);
 
-            let fetchedZorgdossier = await getZorgdossierByClientId(clientId);
+            const fetchedZorgdossier = await getZorgdossierByClientId(clientId);
             setZorgdossier(fetchedZorgdossier);
 
             let fetchedOnderzoek = null;
-            // let fetchedDiagnose = null; // Deze is niet meer nodig hier, we halen diagnose niet op bij initieel laden
+            let fetchedDiagnose = null;
 
             if (fetchedZorgdossier && fetchedZorgdossier.id) {
                 fetchedOnderzoek = await getOnderzoekByDossierId(fetchedZorgdossier.id);
                 setOnderzoek(fetchedOnderzoek);
 
-                // We halen hier GEEN bestaande diagnose op. De gebruiker moet altijd een diagnose invullen.
-                // Als er ALLES bestaat (client, zorgdossier, onderzoek, EN we hebben een diagnose state),
-                // dan kunnen we eventueel doorsturen.
-                // Echter, volgens jouw laatste instructie,
-                // sturen we direct door NA de succesvolle diagnose *submit*.
+                if (fetchedOnderzoek && fetchedOnderzoek.diagnose && fetchedOnderzoek.diagnose.length > 0) {
+                    fetchedDiagnose = fetchedOnderzoek.diagnose[0];
+                    setDiagnose(fetchedDiagnose);
+                } else {
+                    setDiagnose(null);
+                }
             } else {
                 setOnderzoek(null);
-                setDiagnose(null); // Zorg ervoor dat diagnose null is als zorgdossier ontbreekt
+                setDiagnose(null);
             }
 
-            // BELANGRIJK: De automatische navigatie bij het laden van de pagina is verwijderd,
-            // omdat de gebruiker altijd een diagnose *moet* invullen op deze pagina.
-            // Navigatie gebeurt alleen na een succesvolle `handleDiagnoseSubmit`.
+            // Navigate if all essential data is present
+            if (fetchedClient && fetchedZorgdossier && fetchedOnderzoek && fetchedDiagnose) {
+                message.info("Cliënt, zorgdossier, onderzoek en diagnose zijn compleet. Doorsturen naar behoeftepagina...");
+                history.push({
+                    pathname: BEHOEFTE_PAGINA_PATH,
+                    state: {
+                        zorgdossierId: fetchedZorgdossier.id,
+                        onderzoekId: fetchedOnderzoek.id,
+                        diagnoseId: fetchedDiagnose.id
+                    },
+                });
+            }
 
         } catch (error) {
             message.error("Fout bij het laden van cliëntdetails of gekoppelde dossiers.");
@@ -88,11 +97,10 @@ const ClientDetailPage = () => {
                 client_id: clientId,
                 situatie: values.situatie,
             };
-            const newZorgdossier = await createZorgdossier(zorgdossierData);
+            await createZorgdossier(zorgdossierData); // Call API to create
             message.success("Zorgdossier succesvol aangemaakt!");
-            setZorgdossier(newZorgdossier);
             zorgdossierForm.resetFields();
-            await fetchData(); // Herhaal fetch om de volgende stap (Onderzoek) te controleren
+            await fetchData(); // Re-fetch all data to ensure consistent state
         } catch (error) {
             message.error("Fout bij het aanmaken van het zorgdossier.");
             console.error("Error creating zorgdossier:", error);
@@ -115,11 +123,10 @@ const ClientDetailPage = () => {
                 begin_datum: values.begin_datum.toISOString(),
                 eind_datum: values.eind_datum ? values.eind_datum.toISOString() : vandaag.add(1, 'year').toISOString(),
             };
-            const newOnderzoek = await createOnderzoek(onderzoekData);
+            await createOnderzoek(onderzoekData); // Call API to create
             message.success("Onderzoek succesvol aangemaakt!");
-            setOnderzoek(newOnderzoek);
             onderzoekForm.resetFields();
-            await fetchData(); // Herhaal fetch om de volgende stap (Diagnose) te controleren
+            await fetchData(); // Re-fetch all data to ensure consistent state
         } catch (error) {
             message.error("Fout bij het aanmaken van het onderzoek.");
             console.error("Error creating onderzoek:", error);
@@ -145,24 +152,10 @@ const ClientDetailPage = () => {
                 status: "Actief",
             };
 
-            // BELANGRIJK: We gaan er vanuit dat createDiagnose altijd slaagt (HTTP 200 OK)
-            // en de net aangemaakte diagnose teruggeeft.
-            const newDiagnose = await createDiagnose(onderzoek.id, diagnoseData);
+            await createDiagnose(onderzoek.id, diagnoseData); // Call API to create
             message.success("Diagnose succesvol aangemaakt!");
-            setDiagnose(newDiagnose); // Stel de state in met de response van de net aangemaakte diagnose
-
-            diagnoseForm.resetFields(); // Reset het formulier na succesvolle indiening
-            // TODO: Dit is het punt waar we nu direct navigeren, zonder expliciet de diagnose opnieuw op te halen.
-            // Navigeer direct na het succesvol aanmaken van de diagnose
-            history.push({
-                pathname: BEHOEFTE_PAGINA_PATH,
-                state: {
-                    zorgdossierId: zorgdossier.id,
-                    onderzoekId: onderzoek.id,
-                    diagnoseId: newDiagnose.id // Geef de ID van de zojuist gemaakte diagnose mee
-                },
-            });
-
+            diagnoseForm.resetFields();
+            await fetchData(); // Re-fetch all data to ensure consistent state and trigger navigation
         } catch (error) {
             message.error("Fout bij het aanmaken van de diagnose.");
             console.error("Diagnose fout:", error);
@@ -257,7 +250,7 @@ const ClientDetailPage = () => {
                 </>
             )}
 
-            {zorgdossier && onderzoek && ( // Altijd zichtbaar als zorgdossier en onderzoek bestaan
+            {zorgdossier && onderzoek && !diagnose && (
                 <>
                     <Divider />
                     <Card title="Diagnose Toevoegen" style={{ marginTop: '20px' }}>
@@ -319,10 +312,10 @@ const ClientDetailPage = () => {
                 </>
             )}
 
-            {diagnose && ( // Toon de zojuist aangemaakte diagnose als deze in de state staat
+            {diagnose && (
                 <>
                     <Divider />
-                    <Card title="Laatst Geregistreerde Diagnose" style={{ marginTop: '20px' }}>
+                    <Card title="Geregistreerde Diagnose" style={{ marginTop: '20px' }}>
                         <Paragraph>ID: {diagnose.id}</Paragraph>
                         <Paragraph>Onderzoek ID: {diagnose.onderzoek_id}</Paragraph>
                         <Paragraph>Code: {diagnose.diagnosecode}</Paragraph>
@@ -334,7 +327,7 @@ const ClientDetailPage = () => {
                 </>
             )}
 
-            {client && zorgdossier && onderzoek && diagnose && ( // Navigatieknop alleen als alles compleet is
+            {client && zorgdossier && onderzoek && diagnose && (
                  <>
                     <Divider />
                     <Button

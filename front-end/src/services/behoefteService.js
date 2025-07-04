@@ -1,41 +1,49 @@
 import callApi from './api';
+
 export const addBehoefte = async (behoefteData) => {
   return callApi("behoefte", '/behoefte', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }, 
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(behoefteData),
   });
 };
 
 export const startCategorieAanvraag = async (inputData) => {
-  return callApi("behoefte", '/aanvragen/categorie/start', {
-    method: 'POST',
+  return callApi("aanvraag", '/aanvraag/categorie', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),
   });
 };
 
 export const getPassendeCategorieenLijst = async (clientId) => {
-  return callApi("behoefte", `/aanvragen/categorie?patientId=${clientId}`);
+  return callApi("aanvraag", `/aanvraag/categorie/client?clientId=${clientId}`);
 };
 
 export const kiesCategorie = async (inputData) => {
-  return callApi("behoefte", '/aanvragen/categorie/kies', { 
+  return callApi("behoefte", '/aanvraag/categorie/kies', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),
   });
 };
 
 export const startProductAanvraag = async (inputData) => {
-  return callApi("behoefte", '/aanvragen/oplossing/start', { 
-    method: 'POST',
+  return callApi("aanvraag", '/aanvraag/product', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),
   });
+};
+
+export const getPassendeProductenLijst = async (clientId) => {
+  return callApi("behoefte", `/aanvraag/recommendatie/product/?clientId=${clientId}`);
 };
 
 export const getZorgdossierByClientId = async (clientId) => {
     try {
         const response = await callApi("ecd", `/api/zorgdossier/client/${clientId}`);
-        return response && response.id ? response : null; 
+        return response && response.id ? response : null;
     } catch (error) {
         console.error("Error fetching zorgdossier:", error);
         return null;
@@ -52,7 +60,6 @@ export const getOnderzoekByDossierId = async (zorgdossierId) => {
     }
 };
 
-
 export const getOnderzoekByOnderzoekId = async (zorgdossierId) => {
     try {
         const response = await callApi("ecd", `/api/onderzoek/${zorgdossierId}`);
@@ -62,7 +69,6 @@ export const getOnderzoekByOnderzoekId = async (zorgdossierId) => {
         return null;
     }
 };
-
 
 export const createZorgdossier = async (zorgdossierData) => {
     return await callApi("behoefte", "/ecd/zorgdossier", {
@@ -94,16 +100,12 @@ export const createDiagnose = async (onderzoekId, data) => {
   });
 };
 
-
 export const kiesProduct = async (inputData) => {
-  return callApi("behoefte", '/aanvragen/oplossing/kies', { 
+  return callApi("behoefte", '/aanvraag/product/kies', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),
   });
-};
-
-export const getPassendeProductenLijst = async (clientId) => {
-  return callApi("behoefte", `/aanvragen/oplossing?clientId=${clientId}`);
 };
 
 export const getClient = async (clientId) => {
@@ -112,10 +114,23 @@ export const getClient = async (clientId) => {
         return response;
     } catch (error) {
         console.error(`Error fetching client with ID ${clientId}:`, error);
-        throw error; 
+        throw error;
     }
 };
 
 export const getBehoeftenByClientId = async (clientId) => {
   return callApi("behoefte", `/behoefte/client/${clientId}`);
+};
+
+export const startAanvraag = async (aanvraagData, behoefteId) => {
+  console.log(aanvraagData, behoefteId)
+  return callApi("behoefte", `/behoefte/${behoefteId}/aanvraagverwerking`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(aanvraagData),
+  });
+};
+
+export const getAanvragenByClientId = async (clientId) => {
+  return callApi("aanvraag", `/aanvraag/client/${clientId}`);
 };

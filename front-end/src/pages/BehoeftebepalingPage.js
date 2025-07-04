@@ -1,19 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
-import { Button, Input, List, Card, Spin, message, Form, Typography, Select } from 'antd'; // Select is toegevoegd voor urgentie
+import { Button, Input, List, Card, Spin, message, Form, Typography, Select, Divider } from 'antd';
 import Container from '../common/Container';
 import {
-    getBehoeftenByClientId, // Deze functie gaan we echt gebruiken
+    getBehoeftenByClientId,
     addBehoefte,
     startCategorieAanvraag,
     getPassendeCategorieenLijst,
     kiesCategorie,
-    getZorgdossierByClientId, // Gebruikt voor fallback om zorgdossier ID te vinden
-    getOnderzoekByDossierId // Gebruikt voor fallback om onderzoek ID te vinden
-} from '../services/behoefteService';
+    getZorgdossierByClientId,
+    getOnderzoekByDossierId,
+    // New functions for aanvraag and product flows
+    startAanvraag,
+    getAanvragenByClientId as fetchAanvragenByClientId, // Renamed to avoid conflict
+    startProductAanvraag,
+    getPassendeProductenLijst,
+    kiesProduct,
+} from '../services/behoefteService'; // Assuming new functions are added here
 
 const { Title, Paragraph } = Typography;
-const { Option } = Select; // Voor de urgentie dropdown
+const { Option } = Select;
 
 const BehoeftebepalingPage = () => {
     const { clientId } = useParams();
@@ -23,13 +29,16 @@ const BehoeftebepalingPage = () => {
     const [zorgdossierId, setZorgdossierId] = useState(null);
     const [onderzoekId, setOnderzoekId] = useState(null);
     const [behoeften, setBehoeften] = useState([]);
+    const [aanvragen, setAanvragen] = useState([]); // New state for aanvragen
     const [loading, setLoading] = useState(true);
     const [form] = Form.useForm();
     const [selectedBehoefte, setSelectedBehoefte] = useState(null);
+    const [selectedAanvraag, setSelectedAanvraag] = useState(null); // New state for selected aanvraag
     const [categorieen, setCategorieen] = useState([]);
+    const [producten, setProducten] = useState([]); // New state for recommended products
 
-    // Functie om de benodigde ID's te laden en behoeften op te halen
-    const loadIdsAndFetchBehoeften = useCallback(async () => {
+    // Function to load necessary IDs and fetch behoeften and aanvragen
+    const loadData = useCallback(async () => {
         setLoading(true);
         let currentZorgdossierId = null;
         let currentOnderzoekId = null;
@@ -43,7 +52,7 @@ const BehoeftebepalingPage = () => {
                 const zorgdossier = await getZorgdossierByClientId(clientId);
                 if (zorgdossier && zorgdossier.id) {
                     currentZorgdossierId = zorgdossier.id;
-                    const onderzoek = await getOnderzoekByDossierId(currentZorgdossierId); // Haal onderzoek op via zorgdossier ID
+                    const onderzoek = await getOnderzoekByDossierId(currentZorgdossierId);
                     if (onderzoek && onderzoek.id) {
                         currentOnderzoekId = onderzoek.id;
                     } else {
@@ -63,24 +72,35 @@ const BehoeftebepalingPage = () => {
 
         if (currentOnderzoekId) {
             try {
-                const fetchedBehoeften = await getBehoeftenByClientId(clientId); // Gebruik nu getBehoeftenByOnderzoekId
+                const fetchedBehoeften = await getBehoeftenByClientId(clientId);
                 setBehoeften(fetchedBehoeften);
                 message.success("Behoeften succesvol geladen.");
             } catch (error) {
-                message.error("Geen behoeften gevonden voor dit onderzoek.");
+                message.info("Geen behoeften gevonden voor dit onderzoek.");
                 console.error("Error fetching behoeften:", error);
                 setBehoeften([]);
             }
+
+            try {
+                const fetchedAanvragen = await fetchAanvragenByClientId(clientId); // Use the new fetch
+                setAanvragen(fetchedAanvragen);
+                message.success("Aanvragen succesvol geladen.");
+            } catch (error) {
+                message.info("Geen aanvragen gevonden voor deze cliënt.");
+                console.error("Error fetching aanvragen:", error);
+                setAanvragen([]);
+            }
         } else {
-            message.info("Geen geldig Onderzoek ID beschikbaar om behoeften te laden.");
+            message.info("Geen geldig Onderzoek ID beschikbaar om behoeften en aanvragen te laden.");
             setBehoeften([]);
+            setAanvragen([]);
         }
         setLoading(false);
     }, [clientId, location.state]);
 
     useEffect(() => {
-        loadIdsAndFetchBehoeften();
-    }, [loadIdsAndFetchBehoeften]);
+        loadData();
+    }, [loadData]);
 
     const handleAddBehoefte = async (values) => {
         const { titel, beschrijving, urgentie } = values;
@@ -97,67 +117,156 @@ const BehoeftebepalingPage = () => {
         setLoading(true);
         try {
             const newBehoefteData = {
-                onderzoek_id: onderzoekId, // Gebruik het opgehaalde onderzoekId (past bij backend payload)
-                client_id: clientId,     // ClientId blijft via useParams beschikbaar (past bij backend payload)
-                titel: titel,            // Nieuw: Titel
+                onderzoek_id: onderzoekId,
+                client_id: clientId,
+                titel: titel,
                 beschrijving: beschrijving,
-                urgentie: urgentie,      // Nieuw: Urgentie
-                // status: 0 // Als status op backend wordt gegenereerd of optioneel is, kan deze weg
+                urgentie: urgentie,
             };
-            console.log(newBehoefteData)
+            console.log("Adding behoefte with data:", newBehoefteData);
             await addBehoefte(newBehoefteData);
-            form.resetFields(); // Reset het formulier
+            form.resetFields();
             message.success("Behoefte succesvol toegevoegd.");
-            await loadIdsAndFetchBehoeften(); // Herlaad behoeften na toevoegen
+            await loadData(); // Reload all data
         } catch (error) {
-            message.error("Fout bij het toevoegen van behoefte: " + error.message);
+            message.error("Fout bij het toevoegen van behoefte: " + (error.message || error));
             console.error("Error adding behoefte:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleStartCategorieAanvraag = async (behoefte) => {
-        setSelectedBehoefte(behoefte);
+    const handleStartAanvraag = async (behoefte, behoefteId) => {
         setLoading(true);
         try {
-            const inputData = {
-                client_id: behoefte.client_id, // Gebruik de correcte veldnaam 'client_id'
-                behoefte_beschrijving: behoefte.beschrijving
+            // Need client data for StartAanvraag handler. Assuming `behoefte` object has `client_id`.
+            // In a real app, you might fetch client details or pass them from a parent context.
+            const clientData = { id: clientId }; // Simplified client object for the payload
+            const aanvraagPayload = {
+                client: clientData,
+                behoefte: behoefte,
             };
-            await startCategorieAanvraag(inputData);
-            message.success("Categorie-aanvraag gestart. Categorieën ophalen...");
-
-            const response = await getPassendeCategorieenLijst(behoefte.client_id); // Gebruik de correcte veldnaam 'client_id'
-            setCategorieen(response.categorielijst);
-            message.success("Categorieën succesvol opgehaald.");
-
+            console.log(aanvraagPayload, behoefteId)
+            const newAanvraag = await startAanvraag(aanvraagPayload, behoefteId);
+            message.success(`Aanvraag voor behoefte "${behoefte.titel}" succesvol gestart.`);
+            setSelectedAanvraag(newAanvraag); // Set the newly created aanvraag as selected
+            await loadData(); // Reload aanvragen list
         } catch (error) {
-            message.error("Fout bij opvragen categorie aanbeveling: " + error.message);
-            console.error("Error starting category request:", error);
+            message.error("Fout bij het starten van de aanvraag: " + (error.message || error));
+            console.error("Error starting aanvraag:", error);
         } finally {
             setLoading(false);
         }
     };
 
+const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
+    setSelectedAanvraag(aanvraagToProcess);
+    setLoading(true);
+
+    // Add a check to ensure `behoefte` exists on the `aanvraagToProcess` object
+    if (!aanvraagToProcess.Behoefte || !aanvraagToProcess.Behoefte.beschrijving) {
+        message.error("Beschrijving van de behoefte ontbreekt voor deze aanvraag. Kan geen categorie advies starten.");
+        setLoading(false);
+        return;
+    }
+
+    try {
+        console.log(aanvraagToProcess.Behoefte)
+        const inputData = {
+            patientId: aanvraagToProcess.client_id,
+            behoeften: aanvraagToProcess.Behoefte.beschrijving,
+        };
+        console.log(inputData)
+        await startCategorieAanvraag(inputData);
+        message.success("Categorie-aanvraag gestart. Categorieën ophalen...");
+
+        const response = await getPassendeCategorieenLijst(aanvraagToProcess.client_id);
+        setCategorieen(response.categorielijst);
+        message.success("Categorieën succesvol opgehaald.");
+        await loadData();
+    } catch (error) {
+        message.error("Fout bij opvragen categorie aanbeveling: " + (error.message || error));
+        console.error("Error starting category request:", error);
+    } finally {
+        setLoading(false);
+    }
+};
+
     const handleKiesCategorie = async (categorieId) => {
-        if (!selectedBehoefte) {
-            message.error("Geen behoefte geselecteerd voor categoriekeuze.");
+        if (!selectedAanvraag) {
+            message.error("Geen aanvraag geselecteerd voor categoriekeuze.");
             return;
         }
         setLoading(true);
         try {
             const inputData = {
-                client_id: selectedBehoefte.client_id, // Gebruik de correcte veldnaam 'client_id'
-                behoefte_id: selectedBehoefte.id,
-                categorie: categorieId
+                client_id: selectedAanvraag.client_id,
+                behoefte_id: selectedAanvraag.behoefte_id,
+                categorie: categorieId,
             };
             await kiesCategorie(inputData);
-            message.success(`Categorie ${categorieId} gekozen.`);
-            history.push(`/clients/${clientId}/aanvraag/${selectedBehoefte.id}/advies`);
+            message.success(`Categorie ${categorieId} gekozen voor aanvraag ${selectedAanvraag.id}.`);
+            await loadData(); // Refresh aanvragen to show updated status
+            // Optionally, clear categories and prepare for product recommendation
+            setCategorieen([]);
+            setSelectedAanvraag({ ...selectedAanvraag, GekozenCategorieID: categorieId }); // Update selected Aanvraag locally
         } catch (error) {
-            message.error("Fout bij het kiezen van categorie: " + error.message);
+            message.error("Fout bij het kiezen van categorie: " + (error.message || error));
             console.error("Error choosing category:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStartProductAanvraag = async (aanvraagToProcess) => {
+        setSelectedAanvraag(aanvraagToProcess); // Ensure the correct aanvraag is selected
+        setLoading(true);
+        try {
+            if (!aanvraagToProcess.GekozenCategorieID) {
+                message.warning("Er is nog geen categorie gekozen voor deze aanvraag.");
+                return;
+            }
+
+            const inputData = {
+                client_id: aanvraagToProcess.client_id,
+                behoefte_beschrijving: aanvraagToProcess.behoefte.beschrijving,
+                gekozen_categorie_id: aanvraagToProcess.GekozenCategorieID,
+            };
+            await startProductAanvraag(inputData);
+            message.success("Product-aanvraag gestart. Producten ophalen...");
+
+            const response = await getPassendeProductenLijst(aanvraagToProcess.client_id);
+            setProducten(response.productlijst);
+            message.success("Producten succesvol opgehaald.");
+            await loadData(); // Refresh aanvragen to show updated status
+        } catch (error) {
+            message.error("Fout bij opvragen product aanbeveling: " + (error.message || error));
+            console.error("Error starting product request:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleKiesProduct = async (productEAN) => {
+        if (!selectedAanvraag) {
+            message.error("Geen aanvraag geselecteerd voor productkeuze.");
+            return;
+        }
+        setLoading(true);
+        try {
+            const inputData = {
+                client_id: selectedAanvraag.client_id,
+                behoefte_id: selectedAanvraag.behoefte_id,
+                product_ean: productEAN,
+            };
+            await kiesProduct(inputData);
+            message.success(`Product met EAN ${productEAN} gekozen voor aanvraag ${selectedAanvraag.id}.`);
+            await loadData(); // Refresh aanvragen to show updated status
+            setProducten([]); // Clear product list
+            setSelectedAanvraag(null); // Clear selected aanvraag as workflow is complete
+        } catch (error) {
+            message.error("Fout bij het kiezen van product: " + (error.message || error));
+            console.error("Error choosing product:", error);
         } finally {
             setLoading(false);
         }
@@ -166,7 +275,7 @@ const BehoeftebepalingPage = () => {
     if (loading) {
         return (
             <Container>
-                <Spin size="large" tip="Behoeften laden..." />
+                <Spin size="large" tip="Gegevens laden..." />
             </Container>
         );
     }
@@ -183,7 +292,7 @@ const BehoeftebepalingPage = () => {
 
     return (
         <Container>
-            <Title level={1}>Behoeften voor Cliënt: {clientId}</Title>
+            <Title level={1}>Behoeften en Aanvragen voor Cliënt: {clientId}</Title>
             <Paragraph>Huidig Zorgdossier ID: **{zorgdossierId}**</Paragraph>
             <Paragraph>Huidig Onderzoek ID: **{onderzoekId}**</Paragraph>
 
@@ -209,7 +318,7 @@ const BehoeftebepalingPage = () => {
                     <Form.Item
                         label="Urgentie"
                         name="urgentie"
-                        initialValue="Laag" // Standaardwaarde
+                        initialValue="Laag"
                         rules={[{ required: true, message: 'Selecteer de urgentie!' }]}
                     >
                         <Select placeholder="Selecteer urgentie">
@@ -224,15 +333,21 @@ const BehoeftebepalingPage = () => {
                 </Form>
             </Card>
 
-            <Card title="Bestaande Behoeften">
+            <Divider />
+
+            <Card title="Bestaande Behoeften" style={{ marginBottom: '20px' }}>
                 <List
                     bordered
                     dataSource={behoeften}
                     renderItem={(behoefte) => (
                         <List.Item
                             actions={[
-                                <Button key="advies" onClick={() => handleStartCategorieAanvraag(behoefte)}>
-                                    Vraag Categorie Advies
+                                <Button
+                                    key="start-aanvraag"
+                                    onClick={() => handleStartAanvraag(behoefte, behoefte.id)}
+                                    disabled={loading || aanvragen.some(a => a.behoefte_id === behoefte.id)}
+                                >
+                                    Start Aanvraag
                                 </Button>,
                             ]}
                         >
@@ -251,8 +366,57 @@ const BehoeftebepalingPage = () => {
                 />
             </Card>
 
-            {categorieen.length > 0 && (
-                <Card title="Gevonden Categorieën" style={{ marginTop: '20px' }}>
+            <Divider />
+
+            <Card title="Bestaande Aanvragen" style={{ marginBottom: '20px' }}>
+                <List
+                    bordered
+                    dataSource={aanvragen}
+                    renderItem={(aanvraag) => (
+                        <List.Item
+                            actions={[
+                                // Only show "Vraag Categorie Advies" if no category is chosen yet and it's not waiting for a category choice
+                                (!aanvraag.GekozenCategorieID && aanvraag.Status !== 1) && (
+                                    <Button
+                                        key="advies"
+                                        onClick={() => handleStartCategorieAanvraag(aanvraag)}
+                                        loading={loading && selectedAanvraag?.id === aanvraag.id}
+                                    >
+                                        Vraag Categorie Advies
+                                    </Button>
+                                ),
+                                // Show "Vraag Product Advies" if a category is chosen and no product is chosen yet
+                                (aanvraag.GekozenCategorieID && !aanvraag.GekozenProductID && aanvraag.Status !== 2) && (
+                                    <Button
+                                        key="product-advies"
+                                        onClick={() => handleStartProductAanvraag(aanvraag)}
+                                        loading={loading && selectedAanvraag?.id === aanvraag.id}
+                                    >
+                                        Vraag Product Advies
+                                    </Button>
+                                ),
+                            ]}
+                        >
+                            <List.Item.Meta
+                                title={`Aanvraag voor: ${aanvraag.Behoefte?.titel || aanvraag.Behoefte?.beschrijving || 'Onbekende Behoefte'}`}
+                                description={
+                                    <>
+                                        <Paragraph>Aanvraag ID: {aanvraag.id}</Paragraph>
+                                        <Paragraph>Behoefte ID: {aanvraag.behoefte_id}</Paragraph>
+                                        <Paragraph>Status: **{aanvraag.StatusString || aanvraag.Status}**</Paragraph>
+                                        <Paragraph>Budget: €{aanvraag.Budget ? aanvraag.Budget.toFixed(2) : 'N.v.t.'}</Paragraph>
+                                        {aanvraag.GekozenCategorieID && <Paragraph>Gekozen Categorie ID: {aanvraag.GekozenCategorieID}</Paragraph>}
+                                        {aanvraag.GekozenProductID && <Paragraph>Gekozen Product EAN: {aanvraag.GekozenProductID}</Paragraph>}
+                                    </>
+                                }
+                            />
+                        </List.Item>
+                    )}
+                />
+            </Card>
+
+            {categorieen.length > 0 && selectedAanvraag && (
+                <Card title={`Gevonden Categorieën voor Aanvraag: ${selectedAanvraag.id}`} style={{ marginTop: '20px' }}>
                     <List
                         bordered
                         dataSource={categorieen}
@@ -267,6 +431,35 @@ const BehoeftebepalingPage = () => {
                                 <List.Item.Meta
                                     title={categorie.Naam}
                                     description={`ID: ${categorie.ID}`}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                </Card>
+            )}
+
+            {producten.length > 0 && selectedAanvraag && selectedAanvraag.GekozenCategorieID && (
+                <Card title={`Gevonden Producten voor Aanvraag: ${selectedAanvraag.id} (Categorie: ${selectedAanvraag.GekozenCategorieID})`} style={{ marginTop: '20px' }}>
+                    <List
+                        bordered
+                        dataSource={producten}
+                        renderItem={(product) => (
+                            <List.Item
+                                actions={[
+                                    <Button key="select-product" onClick={() => handleKiesProduct(product.EAN)}>
+                                        Kies dit Product
+                                    </Button>,
+                                ]}
+                            >
+                                <List.Item.Meta
+                                    title={product.Naam}
+                                    description={
+                                        <>
+                                            <Paragraph>EAN: {product.EAN}</Paragraph>
+                                            <Paragraph>Prijs: €{product.Prijs ? product.Prijs.toFixed(2) : 'N.v.t.'}</Paragraph>
+                                            <Paragraph>Beschrijving: {product.Beschrijving}</Paragraph>
+                                        </>
+                                    }
                                 />
                             </List.Item>
                         )}

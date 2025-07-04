@@ -3,9 +3,23 @@ name: CI Test Alles
 on:
   push:
     branches: [ main ]
-    paths: [ 'tests/**', 'behoeftebepaling/**', 'Aanvraagverwerking/**', 'ECD/**' ]
+    paths:
+      - 'tests/**'
+      - 'behoeftebepaling/**'
+      - 'aanvraagverwerking/**'
+      - 'ecd/**'
+      - 'product/**'
+      - 'recommendation/**'
+      - '.github/workflows/ci.integratietests_tussen_alle_services.yml'
   pull_request:
-    paths: [ 'tests/**', '.github/workflows/ci.alles.yml' ]
+    paths:
+      - 'tests/**'
+      - 'behoeftebepaling/**'
+      - 'aanvraagverwerking/**'
+      - 'ecd/**'
+      - 'product/**'
+      - 'recommendation/**'
+      - '.github/workflows/ci.integratietests_tussen_alle_services.yml'
   workflow_dispatch:
 
 jobs:

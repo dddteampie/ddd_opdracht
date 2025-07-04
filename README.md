@@ -7,7 +7,7 @@ Services:
 
 Overigen:
 - Integratie testen tussen alle services
--> Postman collections
+- Postman collections
 - Unit testen
 
 

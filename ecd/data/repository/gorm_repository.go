@@ -74,6 +74,20 @@ func (r *GormRepository) GetOnderzoekByID(onderzoekID uuid.UUID) (*dto.Onderzoek
 	return &dto, nil
 }
 
+func (r *GormRepository) GetOnderzoekByDossierId(zorgdossierId uuid.UUID) (*dto.OnderzoekDTO, error) {
+	var model model.Onderzoek
+	if err := r.db.
+		Preload("Anamnese").
+		Preload("Diagnose").
+		Preload("Meetresultaat").
+		Order("created_at desc").
+		First(&model, "zorgdossier_id = ?", zorgdossierId).Error; err != nil {
+		return nil, err
+	}
+	dto := ToOnderzoekDTO(model)
+	return &dto, nil
+}
+
 func (r *GormRepository) GetOnderzoekenByZorgdossierID(zorgdossierID uuid.UUID) ([]dto.OnderzoekDTO, error) {
 	var models []model.Onderzoek
 	if err := r.db.Where("zorgdossier_id = ?", zorgdossierID).Find(&models).Error; err != nil {

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"aanvraagverwerking/handlers"
 	"aanvraagverwerking/pkg/auth"
 	"aanvraagverwerking/pkg/config"
 	aanvraagverwerking_repo "aanvraagverwerking/repository"
-	"log"
-	"net/http"
 
+	ghandler "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -45,10 +47,20 @@ func main() {
 	r.Handle("/aanvraagverwerking/aanvraag/categorie/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesCategorie))).Methods("POST")
 	r.Handle("/aanvraagverwerking/aanvraag/product", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartProductAanvraag))).Methods("PUT")
 	r.Handle("/aanvraagverwerking/aanvraag/product/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesProduct))).Methods("POST")
-
 	r.Handle("/aanvraagverwerking/aanvraag/recommendatie/categorie/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeCategorieenLijstOp))).Methods("GET")
 	r.Handle("/aanvraagverwerking/aanvraag/recommendatie/product/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeProductenLijstOp))).Methods("GET")
 
-	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
-	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
+	allowedMethods := ghandler.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+
+	allowedHeaders := ghandler.AllowedHeaders([]string{"Content-Type", "Authorization"})
+
+	corsRouter := ghandler.CORS(
+		ghandler.AllowedOrigins([]string{cfg.CorsOrigin}),
+		allowedMethods,
+		allowedHeaders,
+		ghandler.MaxAge(86400),
+	)(r)
+
+	log.Printf("Aanvraagverwerking-service draait op %s...", cfg.ServerPort)
+	log.Fatal(http.ListenAndServe(cfg.ServerPort, corsRouter))
 }

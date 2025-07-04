@@ -13,6 +13,7 @@ type Config struct {
 	ServerPort        string `json:"server_port"`
 	AuthzDevMode      bool   `json:"AuthzDevMode"`
 	RecommendationUrl string `json:"recommendation_url"`
+	CorsOrigin        string `json:"CorsOrigin"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -52,6 +53,9 @@ func LoadConfigFromEnv() (*Config, error) {
 	if RecommendationUrl := os.Getenv("RECOMMENDATION_URL"); RecommendationUrl != "" {
 		cfg.RecommendationUrl = RecommendationUrl
 	}
+	if CorsOrigin := os.Getenv("CorsOrigin"); CorsOrigin != "" {
+		cfg.CorsOrigin = CorsOrigin
+	}
 
 	return cfg, nil
 }
@@ -68,6 +72,7 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg := &Config{}
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
+	cfg.ServerPort = os.Getenv("CorsOrigin")
 	cfg.AuthzDevMode, _ = strconv.ParseBool(os.Getenv("AuthzDevMode"))
 	cfg.RecommendationUrl = os.Getenv("RECOMMENDATION_URL")
 
@@ -76,6 +81,9 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	}
 	if cfg.ServerPort == "" {
 		log.Println("Warning: SERVER_PORT is not set in the .env file.")
+	}
+	if cfg.CorsOrigin == "" {
+		log.Println("Warning: CorsOrigin is not set in the .env file.")
 	}
 
 	if cfg.RecommendationUrl == "" {

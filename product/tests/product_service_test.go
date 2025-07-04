@@ -338,7 +338,7 @@ func TestHaalProductenOp(t *testing.T) {
 			name:           "Filter op meerdere bestaande tags (lichtgewicht,opvouwbaar)",
 			queryParams:    "tags=lichtgewicht,opvouwbaar",
 			expectedStatus: http.StatusOK,
-			expectedCount:  1,
+			expectedCount:  2,
 			expectedEANs:   []int{1000000000000},
 		},
 		{

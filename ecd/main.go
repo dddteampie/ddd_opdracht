@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 
+	middleware_ecd "ecd/api/middleware"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -16,6 +18,7 @@ import (
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
 	handler := &handler.Handler{}
 
 	config, err := config.LoadConfig("ecd.env")
@@ -27,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+	r.Use(middleware_ecd.CorsMiddleware(config.CorsOrigin))
 
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
@@ -59,6 +63,7 @@ func main() {
 				r.Post("/{onderzoekId}/diagnose", handler.AddDiagnoseHandler)
 				r.Get("/{onderzoekId}", handler.GetOnderzoekByIDHandler)
 				r.Put("/{onderzoekId}", handler.UpdateOnderzoekHandler)
+				r.Get("/dossier/{dossierId}", handler.GetOnderzoekByDossierIdHandler)
 			})
 		})
 	})

@@ -19,4 +19,5 @@ type Repository interface {
 	GetOnderzoekByID(id uuid.UUID) (*dto.OnderzoekDTO, error)
 	GetOnderzoekenByZorgdossierID(zorgdossierID uuid.UUID) ([]dto.OnderzoekDTO, error)
 	UpdateOnderzoek(dto dto.OnderzoekDTO) error
+	GetOnderzoekByDossierId(zorgdossierId uuid.UUID) (*dto.OnderzoekDTO, error)
 }

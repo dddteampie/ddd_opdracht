@@ -1,0 +1,66 @@
+name: CI Test Alles
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tests/**'
+      - 'behoeftebepaling/**'
+      - 'aanvraagverwerking/**'
+      - 'ecd/**'
+      - 'product/**'
+      - 'recommendation/**'
+      - '.github/workflows/ci.integratietests_tussen_alle_services.yml'
+  pull_request:
+    paths:
+      - 'tests/**'
+      - 'behoeftebepaling/**'
+      - 'aanvraagverwerking/**'
+      - 'ecd/**'
+      - 'product/**'
+      - 'recommendation/**'
+      - '.github/workflows/ci.integratietests_tussen_alle_services.yml'
+  workflow_dispatch:
+
+jobs:
+  Run_Alles_Postman_Tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker compose --env-file CI.env -f tests/compose.test.yaml up -d --build
+
+      - name: Install Newman (Postman CLI)
+        run: |
+          if ! command -v newman &> /dev/null; then
+            npm install -g newman
+          else
+            echo "Newman is already installed"
+          fi
+
+      - name: Wait for services
+        run: |
+          for i in {1..20}; do
+            if curl -sf http://localhost:8083/behoeftebepaling/api/health \
+              && curl -sf http://localhost:8082/ecd/api/health \
+              && curl -sf http://localhost:8085/aanvraagverwerking/api/health \
+              && curl -sf http://localhost:8084/recommendation/api/health; then
+              echo "All services are up!"
+              exit 0
+            fi
+            echo "Waiting for services..."
+            sleep 3
+          done
+          echo "Services did not start in time"
+          docker compose -f tests/compose.test.yaml ps -a
+          docker compose -f tests/compose.test.yaml logs
+          exit 1
+
+      - name: Run Postman tests
+        run: newman run tests/alles.tests.postman_collection.json
+
+      - name: Tear down Docker Compose
+        if: always()
+        run: docker compose -f 'tests/compose.test.yaml' down --remove-orphans --volumes

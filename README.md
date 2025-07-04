@@ -4,6 +4,7 @@
 Services:
 - /behoeftebepaling
 - /aanvraagverwerking
+- /tests
 
 Overigen:
 - Integratie testen tussen alle services

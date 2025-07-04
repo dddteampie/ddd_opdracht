@@ -1,7 +1,7 @@
 import callApi from './api';
 
 export const getClients = async () => {
-  return callApi('ecd', '/api/clients');
+  return callApi('ecd', '/api/client');
 };
 
 export const addClient = async (clientData) => {

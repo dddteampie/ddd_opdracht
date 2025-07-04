@@ -1,4 +1,3 @@
-
 // Map servicenamen naar hun omgevingsvariabelen
 const API_URLS = {
   behoefte: process.env.REACT_APP_BEHOEFTE_API_BASE_URL,

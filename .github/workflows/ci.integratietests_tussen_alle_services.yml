@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Compose
-        run: docker compose -f 'tests/compose.test.yaml' --env-file CI.env up -d --build
+        run: docker compose --env-file CI.env -f tests/compose.test.yaml up -d --build
 
       - name: Install Newman (Postman CLI)
         run: |

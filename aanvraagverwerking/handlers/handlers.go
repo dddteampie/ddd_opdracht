@@ -1,14 +1,11 @@
 package handlers
 
 import (
-	"aanvraagverwerking/helper"
 	"aanvraagverwerking/models"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -27,6 +24,7 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAanvraagByID(w http.ResponseWriter, r *http.Request) {
+	// Haal de aanvraag ID uit de URL-variabelen
 	vars := mux.Vars(r)
 	aanvraagID := vars["id"]
 	if aanvraagID == "" {
@@ -34,6 +32,7 @@ func GetAanvraagByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check of aanvraag bestaat
 	var aanvraag models.Aanvraag
 	if err := DB.Preload("Client").Preload("Behoefte").First(&aanvraag, "id = ?", aanvraagID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -49,6 +48,7 @@ func GetAanvraagByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAanvragenByClientID(w http.ResponseWriter, r *http.Request) {
+	// Haal de clientId uit de URL-variabelen
 	vars := mux.Vars(r)
 	clientID := vars["clientId"]
 	if clientID == "" {
@@ -56,12 +56,14 @@ func GetAanvragenByClientID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check of aanvraag bestaat voor deze client
 	var aanvragen []models.Aanvraag
 	if err := DB.Preload("Client").Preload("Behoefte").Where("client_id = ?", clientID).Find(&aanvragen).Error; err != nil {
 		http.Error(w, "Fout bij ophalen aanvragen: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Controleer of er aanvragen zijn gevonden
 	if len(aanvragen) == 0 {
 		http.Error(w, "Geen aanvragen gevonden voor deze client", http.StatusNotFound)
 		return
@@ -72,36 +74,28 @@ func GetAanvragenByClientID(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartAanvraag(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Client   models.Client   `json:"client"`
-		Behoefte models.Behoefte `json:"behoefte"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// 1. Decodeer de input
+	client, behoefte, err := DecodeAanvraagInput(r)
+	log.Printf("StartAanvraag: client=%+v, behoefte=%+v", client, behoefte)
+	if err != nil {
 		http.Error(w, "Ongeldige input", http.StatusBadRequest)
 		return
 	}
 
-	// Controleer of er al een aanvraag bestaat met dezelfde ClientID en BehoefteID
-	var bestaandeAanvraag models.Aanvraag
-	if err := DB.Where("client_id = ? AND behoefte_id = ?", input.Client.ID, input.Behoefte.ID).First(&bestaandeAanvraag).Error; err == nil {
+	// 2. Controleer of de client bestaat in de ECD
+	bestaat, err := AanvraagBestaat(DB, client.ID, behoefte.ID)
+	if err != nil {
+		http.Error(w, "Databasefout", http.StatusInternalServerError)
+		return
+	}
+	if bestaat {
 		http.Error(w, "Er bestaat al een aanvraag voor deze client en behoefte", http.StatusConflict)
 		return
 	}
 
-	//Maak een random budget aan tussen 200 en 5000
-	budget := helper.RandomFloat64Between(200, 5000)
-
-	aanvraag := models.Aanvraag{
-		ID:         uuid.New(),
-		ClientID:   input.Client.ID,
-		BehoefteID: input.Behoefte.ID,
-		Client:     input.Client,
-		Behoefte:   input.Behoefte,
-		Status:     models.BehoefteOntvangen,
-		Budget:     budget,
-	}
-
-	if err := DB.Create(&aanvraag).Error; err != nil {
+	// 3. Controleer of de client bestaat in de ECD
+	aanvraag := BouwAanvraag(client, behoefte)
+	if err := SlaAanvraagOp(DB, aanvraag); err != nil {
 		http.Error(w, "Fout bij opslaan in database: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -111,107 +105,79 @@ func StartAanvraag(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartCategorieAanvraag(w http.ResponseWriter, r *http.Request) {
-	var input models.CategorieAanvraagDTO
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	// 1. Decodeer de input
+	input, err := DecodeCategorieAanvraagInput(r)
+	if err != nil {
 		http.Error(w, "Ongeldige input", http.StatusBadRequest)
 		return
 	}
 
-	// Haal de aanvraag op, inclusief de behoefte
-	var aanvraag models.Aanvraag
-	// Zoek de aanvraag op basis van clientID en behoefteBeschrijving (aangenomen dat BehoefteBeschrijving uniek is voor de aanvraag)
-	if err := DB.Preload("Behoefte").Joins("JOIN behoeftes ON behoeftes.id = aanvraags.behoefte_id").Where("aanvraags.client_id = ? AND behoeftes.beschrijving = ?", input.ClientID, input.BehoefteBeschrijving).First(&aanvraag).Error; err != nil {
+	// 2. Haal de aanvraag op op basis van clientID en behoefteBeschrijving
+	clientUUID, err := uuid.Parse(input.ClientID)
+	if err != nil {
+		http.Error(w, "Ongeldige clientID", http.StatusBadRequest)
+		return
+	}
+	aanvraag, err := VindAanvraagMetBehoefte(DB, clientUUID, input.BehoefteBeschrijving)
+	if err != nil {
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
 	}
 
-	jsonPayload, err := json.Marshal(input)
-	if err != nil {
-		http.Error(w, "Fout bij serialiseren JSON", http.StatusInternalServerError)
-		return
-	}
-	url := "http://recommendation-service:8084/recommend/categorie/"
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		http.Error(w, "Fout bij bouwen request", http.StatusInternalServerError)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	recResp, err := client.Do(req)
-	if err != nil {
+	// 3. Stuur de categorie-aanvraag door naar de recommendation-service
+	if err := StuurCategorieAanvraagNaarRecommendation(input); err != nil {
 		log.Printf("Fout bij aanroepen recommendation service: %v", err)
 		http.Error(w, "Fout bij aanroepen recommendation service", http.StatusBadGateway)
 		return
 	}
-	defer recResp.Body.Close()
 
-	// Zet de status op WachtenOpCategorieKeuze
-	aanvraag.Status = models.WachtenOpCategorieKeuze
-	if err := DB.Save(&aanvraag).Error; err != nil {
+	// 4. Zet de status van de aanvraag op 'WachtenOpCategorieKeuze'
+	if err := ZetStatusWachtenOpCategorie(DB, &aanvraag); err != nil {
 		log.Printf("Fout bij updaten aanvraagstatus: %v", err)
 		http.Error(w, "Fout bij updaten aanvraagstatus", http.StatusInternalServerError)
 		return
 	}
 
+	// 5. Geef een succesvolle response terug
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("Categorie-aanvraag gestart"))
 }
 
-// HaalPassendeCategorieenLijstOp haalt de lijst op voor een gegeven patientID
 func HaalPassendeCategorieenLijstOp(w http.ResponseWriter, r *http.Request) {
-	recommendationServiceURL := "http://recommendation-service:8084"
+	// 1. Haal en valideer patientId uit de query
 	patientID := r.URL.Query().Get("patientId")
 	if patientID == "" {
 		http.Error(w, "patientId is verplicht", http.StatusBadRequest)
 		return
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/recommend/categorie/?patientId=%s", recommendationServiceURL, patientID)
-	resp, err := client.Get(url)
+	// 2. Haal de categorieënlijst op bij de recommendation-service
+	lijst, status, err := VraagCategorieenLijstOp(patientID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("kon geen request doen: %v", err), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		http.Error(w, fmt.Sprintf("geen passende categorieënlijst gevonden voor patient %s", patientID), http.StatusNotFound)
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("onverwachte status van recommendation service: %s", resp.Status), http.StatusBadGateway)
+		if status == http.StatusNotFound {
+			http.Error(w, fmt.Sprintf("geen passende categorieënlijst gevonden voor patient %s", patientID), http.StatusNotFound)
+		} else if status != 0 {
+			http.Error(w, fmt.Sprintf("onverwachte status van recommendation service: %d", status), http.StatusBadGateway)
+		} else {
+			http.Error(w, fmt.Sprintf("kon geen request doen: %v", err), http.StatusBadGateway)
+		}
 		return
 	}
 
-	var lijst models.CategorieShortListDTO
-	if err := json.NewDecoder(resp.Body).Decode(&lijst); err != nil {
-		http.Error(w, fmt.Sprintf("kon response niet decoden: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	var aanvraag models.Aanvraag
-	if err := DB.Where("client_id = ?", patientID).First(&aanvraag).Error; err != nil {
-		log.Printf("Aanvraag niet gevonden voor client_id %s: %v", patientID, err)
+	// 3. Koppel de categorie-opties aan de aanvraag in de database
+	if err := KoppelCategorieOptiesAanAanvraag(DB, patientID, lijst); err != nil {
+		log.Printf("Fout bij koppelen categorie-opties: %v", err)
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
-	} else {
-		var ids []int64
-		for _, cat := range lijst.Categorielijst {
-			ids = append(ids, int64(cat.ID))
-		}
-		aanvraag.CategorieOpties = ids
-		if err := DB.Save(&aanvraag).Error; err != nil {
-			log.Printf("Fout bij opslaan categorie-opties: %v", err)
-		}
 	}
 
+	// 4. Geef de lijst terug als JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(lijst)
 }
 
 func KiesCategorie(w http.ResponseWriter, r *http.Request) {
+	// 1. Decode input
 	var input struct {
 		ClientID    uuid.UUID `json:"client_id"`
 		BehoefteID  uuid.UUID `json:"behoefte_id"`
@@ -222,31 +188,22 @@ func KiesCategorie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Haal de aanvraag op
-	var aanvraag models.Aanvraag
-	if err := DB.Where("client_id = ? AND behoefte_id = ?", input.ClientID, input.BehoefteID).First(&aanvraag).Error; err != nil {
+	// 2. Haal aanvraag op
+	aanvraag, err := haalAanvraagOp(DB, input.ClientID, input.BehoefteID)
+	if err != nil {
+		log.Printf("Aanvraag niet gevonden voor client %s en behoefte %s: %v", input.ClientID, input.BehoefteID, err)
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
 	}
 
-	// Controleer of de gekozen categorie in de opgeslagen opties zit
-	gevonden := false
-	for _, id := range aanvraag.CategorieOpties {
-		if id == int64(input.CategorieID) {
-			gevonden = true
-			break
-		}
-	}
-	if !gevonden {
+	// 3. Controleer of gekozen categorie toegestaan is
+	if !categorieToegestaan(aanvraag.CategorieOpties, input.CategorieID) {
 		http.Error(w, "Gekozen categorie is niet toegestaan", http.StatusBadRequest)
 		return
 	}
 
-	// Sla de gekozen categorie op
-	aanvraag.GekozenCategorieID = &input.CategorieID
-	aanvraag.Status = models.CategorieGekozen
-
-	if err := DB.Save(&aanvraag).Error; err != nil {
+	// 4. Sla de gekozen categorie op
+	if err := slaGekozenCategorieOp(DB, &aanvraag, input.CategorieID); err != nil {
 		log.Printf("Fout bij opslaan gekozen categorie: %v", err)
 		http.Error(w, "Fout bij opslaan gekozen categorie", http.StatusInternalServerError)
 		return
@@ -263,46 +220,34 @@ func StartProductAanvraag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Haal de aanvraag op
-	var aanvraag models.Aanvraag
-	// Zoek de aanvraag op basis van clientID en behoefteBeschrijving (aangenomen dat BehoefteBeschrijving uniek is voor de aanvraag)
-	if err := DB.Preload("Behoefte").Joins("JOIN behoeftes ON behoeftes.id = aanvraags.behoefte_id").Where("aanvraags.client_id = ? AND behoeftes.beschrijving = ?", input.ClientID, input.BehoefteBeschrijving).First(&aanvraag).Error; err != nil {
+	if err := validateProductAanvraagInput(input); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	clientUUID, err := uuid.Parse(input.ClientID)
+	if err != nil {
+		http.Error(w, "Ongeldige clientID", http.StatusBadRequest)
+		return
+	}
+
+	aanvraag, err := haalProductAanvraagOp(DB, clientUUID, input.BehoefteBeschrijving)
+	if err != nil {
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
 	}
 
-	if aanvraag.GekozenCategorieID == nil || *aanvraag.GekozenCategorieID != *input.GekozenCategorieID {
-		http.Error(w, "Categorie moet eerst gekozen zijn", http.StatusBadRequest)
+	if aanvraag.GekozenCategorieID == nil || input.GekozenCategorieID == nil || *aanvraag.GekozenCategorieID != *input.GekozenCategorieID {
+		http.Error(w, "Geef juiste categorie mee", http.StatusBadRequest)
 		return
 	}
 
-	jsonPayload, err := json.Marshal(input)
-	if err != nil {
-		http.Error(w, "Fout bij serialiseren JSON", http.StatusInternalServerError)
-		return
-	}
-	url := "http://recommendation-service:8084/recommend/oplossing/"
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		http.Error(w, "Fout bij bouwen request", http.StatusInternalServerError)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	recResp, err := client.Do(req)
-	if err != nil {
+	if err := stuurProductAanvraagNaarRecommendation(input); err != nil {
 		log.Printf("Fout bij aanroepen recommendation service: %v", err)
 		http.Error(w, "Fout bij aanroepen recommendation service", http.StatusBadGateway)
 		return
 	}
-	defer recResp.Body.Close()
 
-	if recResp.StatusCode != http.StatusOK && recResp.StatusCode != http.StatusCreated {
-		http.Error(w, "Fout bij ophalen product aanbevelingen", recResp.StatusCode)
-		return
-	}
-
-	// Zet de status op WachtenOpProductKeuze
 	aanvraag.Status = models.WachtenOpProductKeuze
 	if err := DB.Save(&aanvraag).Error; err != nil {
 		log.Printf("Fout bij updaten aanvraagstatus: %v", err)
@@ -313,93 +258,76 @@ func StartProductAanvraag(w http.ResponseWriter, r *http.Request) {
 }
 
 func HaalPassendeProductenLijstOp(w http.ResponseWriter, r *http.Request) {
-	recommendationServiceURL := "http://recommendation-service:8084"
-	ClientID := r.URL.Query().Get("clientId")
-	if ClientID == "" {
-		http.Error(w, "ClientId is verplicht", http.StatusBadRequest)
+	// 1. Haal en valideer clientId uit de query
+	clientID := r.URL.Query().Get("clientId")
+	if clientID == "" {
+		http.Error(w, "clientId is verplicht", http.StatusBadRequest)
 		return
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s/recommend/oplossing/?clientId=%s", recommendationServiceURL, ClientID)
-	resp, err := client.Get(url)
+	// 2. Haal de productenlijst op bij de recommendation-service
+	lijst, status, err := vraagProductenLijstOp(clientID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("kon geen request doen: %v", err), http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		http.Error(w, fmt.Sprintf("geen passende productlijst gevonden voor patient %s", ClientID), http.StatusNotFound)
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("onverwachte status van recommendation service: %s", resp.Status), http.StatusBadGateway)
+		if status == http.StatusNotFound {
+			http.Error(w, fmt.Sprintf("geen passende productlijst gevonden voor client %s", clientID), http.StatusNotFound)
+		} else if status != 0 {
+			http.Error(w, fmt.Sprintf("onverwachte status van recommendation service: %d", status), http.StatusBadGateway)
+		} else {
+			http.Error(w, fmt.Sprintf("kon geen request doen: %v", err), http.StatusBadGateway)
+		}
 		return
 	}
 
-	var lijst models.ProductShortListDTO
-	if err := json.NewDecoder(resp.Body).Decode(&lijst); err != nil {
-		http.Error(w, fmt.Sprintf("kon response niet decoden: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	var aanvraag models.Aanvraag
-	if err := DB.Where("client_id = ?", ClientID).First(&aanvraag).Error; err != nil {
-		log.Printf("Aanvraag niet gevonden voor client_id %s: %v", ClientID, err)
+	// 3. Koppel de product-opties aan de aanvraag in de database
+	if err := koppelProductOptiesAanAanvraag(DB, clientID, lijst); err != nil {
+		log.Printf("Fout bij koppelen product-opties: %v", err)
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
-	} else {
-		var ids []int64
-		for _, cat := range lijst.Productlijst {
-			ids = append(ids, int64(cat.EAN))
-		}
-		aanvraag.ProductOpties = ids
-		if err := DB.Save(&aanvraag).Error; err != nil {
-			log.Printf("Fout bij opslaan producten-opties: %v", err)
-		}
 	}
 
+	// 4. Geef de lijst terug als JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(lijst)
 }
 
 func KiesProduct(w http.ResponseWriter, r *http.Request) {
+	// 1. Decode input
 	var input struct {
 		ClientID   uuid.UUID `json:"client_id"`
 		BehoefteID uuid.UUID `json:"behoefte_id"`
-		ProductEAN int64     `json:"product_ean"`
+		ProductEAN *int64    `json:"product_ean"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Ongeldige input", http.StatusBadRequest)
 		return
 	}
+	// Aangepaste logica voor nil ProductEAN
+	if input.ProductEAN == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest) // <-- Veranderd naar HTTP 400 Bad Request
+		json.NewEncoder(w).Encode(map[string]string{
+			"error":   "missing_product_ean",
+			"message": "Het 'product_ean' veld is verplicht om een product te kiezen.",
+		})
+		return
+	}
 
-	// Haal de aanvraag op
-	var aanvraag models.Aanvraag
-	if err := DB.Where("client_id = ? AND behoefte_id = ?", input.ClientID, input.BehoefteID).First(&aanvraag).Error; err != nil {
+	// 2. Haal aanvraag op
+	aanvraag, err := haalAanvraagOp(DB, input.ClientID, input.BehoefteID)
+	if err != nil {
+		log.Printf("Aanvraag niet gevonden voor client %s en behoefte %s: %v", input.ClientID, input.BehoefteID, err)
 		http.Error(w, "Aanvraag niet gevonden", http.StatusNotFound)
 		return
 	}
 
-	// Controleer of het gekozen product in de opgeslagen opties zit
-	gevonden := false
-	for _, ean := range aanvraag.ProductOpties {
-		if ean == input.ProductEAN {
-			gevonden = true
-			break
-		}
-	}
-	if !gevonden {
+	// 3. Controleer of gekozen product toegestaan is
+	if !productToegestaan(aanvraag.ProductOpties, *input.ProductEAN) {
 		http.Error(w, "Gekozen product is niet toegestaan", http.StatusBadRequest)
 		return
 	}
 
-	// Sla het gekozen product op
-	aanvraag.GekozenProductID = &input.ProductEAN
-	aanvraag.Status = models.ProductGekozen
-
-	if err := DB.Save(&aanvraag).Error; err != nil {
+	// 4. Sla het gekozen product op
+	if err := slaGekozenProductOp(DB, &aanvraag, *input.ProductEAN); err != nil {
 		log.Printf("Fout bij opslaan gekozen product: %v", err)
 		http.Error(w, "Fout bij opslaan gekozen product", http.StatusInternalServerError)
 		return

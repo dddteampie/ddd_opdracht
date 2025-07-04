@@ -94,8 +94,11 @@ func CreateBehoefte(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(behoefte)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id": behoefte.ID,
+	})
 }
 
 func GetBehoefteByOnderzoekID(w http.ResponseWriter, r *http.Request) {

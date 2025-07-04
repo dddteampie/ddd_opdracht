@@ -3,13 +3,16 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DatabaseDSN string `json:"database_dsn"`
-	ServerPort  string `json:"server_port"`
+	DatabaseDSN       string `json:"database_dsn"`
+	ServerPort        string `json:"server_port"`
+	AuthzDevMode      bool   `json:"AuthzDevMode"`
+	RecommendationUrl string `json:"recommendation_url"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -42,6 +45,13 @@ func LoadConfigFromEnv() (*Config, error) {
 	if serverPort := os.Getenv("SERVER_PORT"); serverPort != "" {
 		cfg.ServerPort = serverPort
 	}
+	if AuthzDevMode := os.Getenv("AuthzDevMode"); AuthzDevMode != "" {
+		cfg.AuthzDevMode, _ = strconv.ParseBool(AuthzDevMode)
+	}
+
+	if RecommendationUrl := os.Getenv("RECOMMENDATION_URL"); RecommendationUrl != "" {
+		cfg.RecommendationUrl = RecommendationUrl
+	}
 
 	return cfg, nil
 }
@@ -58,6 +68,8 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg := &Config{}
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
+	cfg.AuthzDevMode, _ = strconv.ParseBool(os.Getenv("AuthzDevMode"))
+	cfg.RecommendationUrl = os.Getenv("RECOMMENDATION_URL")
 
 	if cfg.DatabaseDSN == "" {
 		log.Println("Warning: DATABASE_DSN is not set in the .env file.")
@@ -66,5 +78,8 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 		log.Println("Warning: SERVER_PORT is not set in the .env file.")
 	}
 
+	if cfg.RecommendationUrl == "" {
+		log.Println("Warning: RECOMMENDATION_URL is not set in the .env file.")
+	}
 	return cfg, nil
 }

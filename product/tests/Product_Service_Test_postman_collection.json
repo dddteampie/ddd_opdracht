@@ -1,0 +1,423 @@
+{
+	"info": {
+		"_postman_id": "0c0e0975-78cb-4c50-9343-76f494bc0113",
+		"name": "Product Service API Tests (GoLang)",
+		"description": "Postman collection for testing the GoLang Product Service handlers. Assumes a pre-filled database.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17609424"
+	},
+	"item": [
+		{
+			"name": "POST Requests",
+			"item": [
+				{
+					"name": "PlaatsReview (POST /product/review)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response contains review ID and correct EAN\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.ID).to.be.a('number').and.be.above(0);",
+									"    // Corrected: Use 'productEAN' (lowercase 'p') as per JSON output",
+									"    pm.expect(responseJson.productEAN).to.eql(1000000000000); // Assumes EAN 1000000000000 exists",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ProductEAN\": 1000000000000,\n  \"Naam\": \"Postman Tester\",\n  \"Score\": 5,\n  \"Titel\": \"Uitstekend product!\",\n  \"Inhoud\": \"Zeer tevreden met de aankoop, werkt perfect.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/product/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"review"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VoegProductAanbodToe (POST /product/product/offer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response contains offer ID and correct EAN\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.ID).to.be.a('number').and.be.above(0);",
+									"    // Corrected: Use 'productEAN' (lowercase 'p') as per JSON output",
+									"    pm.expect(responseJson.productEAN).to.eql(1000000000000); // Assumes EAN 1000000000000 exists",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ProductEAN\": 1000000000000,\n  \"Prijs\": 999,\n  \"Voorraad\": 20,\n  \"LeverancierID\": 1 \n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/product/product/offer",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product",
+								"offer"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Tests for creating new resources. Assumes necessary ProductTypes, Suppliers, and Products already exist."
+		},
+		{
+			"name": "GET Requests",
+			"item": [
+				{
+					"name": "HaalProductenOp (GET /product/product) - All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is an array and not empty\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array').and.to.not.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/product",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalProductenOp (GET /product/product) - Filter by EANs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains specific product by EAN\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array').and.to.have.lengthOf(1);",
+									"    pm.expect(responseJson[0].ean).to.eql(1000000000000); // Assumes EAN 1000000000000 exists",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/product?eans=1000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product"
+							],
+							"query": [
+								{
+									"key": "eans",
+									"value": "1000000000000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalProductenOp (GET /product/product) - Filter by Budget",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Products are within budget\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    // This test assumes there's at least one product within 1000 budget",
+									"    // For a more robust test, you'd check prices of returned products.",
+									"    if (responseJson.length > 0) {",
+									"        pm.expect(responseJson[0].productAanbod).to.be.an('array').and.to.not.be.empty;",
+									"        pm.expect(responseJson[0].productAanbod[0].prijs).to.be.at.most(1000);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/product?budget=1000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product"
+							],
+							"query": [
+								{
+									"key": "budget",
+									"value": "1000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalProductenOp (GET /product/product) - Filter by Tags",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains products with specified tags\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    // This test assumes a product exists with 'lichtgewicht' tag",
+									"    if (responseJson.length > 0) {",
+									"        const firstProduct = responseJson[0];",
+									"        pm.expect(firstProduct.tags).to.be.an('array');",
+									"        pm.expect(firstProduct.tags.some(tag => tag.naam === \"lichtgewicht\")).to.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/product?tags=lichtgewicht",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product"
+							],
+							"query": [
+								{
+									"key": "tags",
+									"value": "lichtgewicht"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalProductLeveraarsOp (GET /product/product/suppliers)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains suppliers for the product\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array').and.to.not.be.empty;",
+									"    pm.expect(responseJson[0].name).to.be.a('string'); // Check if Name exists",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/product/suppliers?ean=1000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"product",
+								"suppliers"
+							],
+							"query": [
+								{
+									"key": "ean",
+									"value": "1000000000000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalCategorieenOp (GET /product/categorieen)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is a non-empty array of categories with correct structure and count\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array').and.to.not.be.empty;",
+									"    pm.expect(responseJson.length).to.eql(22); // Based on the provided response data",
+									"    ",
+									"    // Check the structure of the first category object",
+									"    const firstCategory = responseJson[0];",
+									"    pm.expect(firstCategory).to.have.property('ID').and.to.be.a('number').and.to.be.above(0);",
+									"    pm.expect(firstCategory).to.have.property('naam').and.to.be.a('string').and.to.not.be.empty;",
+									"    pm.expect(firstCategory).to.have.property('priceRange').and.to.be.a('number').and.to.be.at.least(0);",
+									"    ",
+									"    // Optional: Check for specific category names if they are guaranteed to exist",
+									"    const categoryNames = responseJson.map(cat => cat.naam);",
+									"    pm.expect(categoryNames).to.include(\"Loopondersteuning\");",
+									"    pm.expect(categoryNames).to.include(\"Wielvoertuigen\");",
+									"    pm.expect(categoryNames).to.include(\"Badkamerhulpmiddelen\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/categorieen",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"categorieen"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HaalTagsOp (GET /product/categorieen/tags)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is an array of tags\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array').and.to.not.be.empty;",
+									"    pm.expect(responseJson[0].naam).to.be.a('string');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/product/categorieen/tags",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"product",
+								"categorieen",
+								"tags"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Tests for retrieving data with various filters. Assumes a pre-filled database."
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8081",
+			"type": "string"
+		}
+	]
+}

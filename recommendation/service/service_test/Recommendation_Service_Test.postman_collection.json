@@ -1,0 +1,277 @@
+{
+	"info": {
+		"_postman_id": "cb676c06-57a3-4dda-aece-1acade269b50",
+		"name": "Recommendation Service Directe Test Suite",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17609424"
+	},
+	"item": [
+		{
+			"name": "1. Recommendation: Create Suitable Category List (PUT /recommendation/recommend/categorie/)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201 Created (or 200 OK for update)\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 200]);",
+							"});",
+							"pm.test(\"Response contains category list ID and categories\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.ID).to.be.a('number');",
+							"    pm.expect(responseJson.ID).to.be.above(0);",
+							"    pm.expect(responseJson.categories).to.be.an('array');",
+							"    pm.expect(responseJson.categories).to.not.be.empty;",
+							"    pm.collectionVariables.set(\"categoryListId\", responseJson.ID);",
+							"    console.log(\"Category List ID created/updated: \" + responseJson.ID);",
+							"    if (responseJson.categories.length > 0) {",
+							"        pm.collectionVariables.set(\"categorie_id\", responseJson.categories[0].id);",
+							"        console.log(\"First Category ID from Recommendation: \" + responseJson.categories[0].id);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"patientID\": \"{{client_id}}\",\n    \"budget\": 1000.0,\n    \"behoeften\": \"Patiënt wil leren lopen na val\"\n}"
+				},
+				"url": {
+					"raw": "{{recommendation-uri}}/recommendation/recommend/categorie/",
+					"host": [
+						"{{recommendation-uri}}"
+					],
+					"path": [
+						"recommendation",
+						"recommend",
+						"categorie",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Recommendation: Get Suitable Category List (GET /recommendation/recommend/categorie/)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response contains expected category list\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.ID).to.eql(Number(pm.collectionVariables.get(\"categoryListId\")));",
+							"    pm.expect(responseJson.categories).to.be.an('array');",
+							"    pm.expect(responseJson.categories).to.not.be.empty;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{recommendation-uri}}/recommendation/recommend/categorie/?patientId={{client_id}}",
+					"host": [
+						"{{recommendation-uri}}"
+					],
+					"path": [
+						"recommendation",
+						"recommend",
+						"categorie",
+						""
+					],
+					"query": [
+						{
+							"key": "patientId",
+							"value": "{{client_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Recommendation: Create Solutions List (PUT /recommendation/recommend/oplossing/)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"if (!pm.collectionVariables.get(\"categorie_id\")) {",
+							"    console.warn(\"Skipping 'Create Solutions List' as no categorie_id was found.\");",
+							"    postman.setNextRequest(null);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201 Created (or 200 OK for update)\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 200]);",
+							"});",
+							"pm.test(\"Response contains solutions list ID and products\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.ID).to.be.a('number');",
+							"    pm.expect(responseJson.ID).to.be.above(0);",
+							"    pm.expect(responseJson.products).to.be.an('array');",
+							"    // pm.expect(responseJson.products).to.not.be.empty; // Products might be empty if no match",
+							"    pm.collectionVariables.set(\"solutionsListId\", responseJson.ID);",
+							"    console.log(\"Solutions List ID created/updated: \" + responseJson.ID);",
+							"    if (responseJson.products.length > 0) {",
+							"        pm.collectionVariables.set(\"productEan\", responseJson.products[0].ean);",
+							"        console.log(\"First Product EAN from Recommendation: \" + responseJson.products[0].ean);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"clientID\": \"{{client_id}}\",\n    \"budget\": 1500.0,\n    \"behoeften\": \"Patiënt wil een nieuwe laptop voor werk.\",\n    \"categoryID\": {{categorie_id}}\n}"
+				},
+				"url": {
+					"raw": "{{recommendation-uri}}/recommendation/recommend/oplossing/",
+					"host": [
+						"{{recommendation-uri}}"
+					],
+					"path": [
+						"recommendation",
+						"recommend",
+						"oplossing",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Recommendation: Get Solutions List (GET /recommendation/recommend/oplossing/)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response contains expected solutions list\", function () {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.ID).to.eql(Number(pm.collectionVariables.get(\"solutionsListId\")));",
+							"    pm.expect(responseJson.products).to.be.an('array');",
+							"    // pm.expect(responseJson.products).to.not.be.empty; // Products might be empty",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{recommendation-uri}}/recommendation/recommend/oplossing/?clientId={{client_id}}",
+					"host": [
+						"{{recommendation-uri}}"
+					],
+					"path": [
+						"recommendation",
+						"recommend",
+						"oplossing",
+						""
+					],
+					"query": [
+						{
+							"key": "clientId",
+							"value": "{{client_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "client_id",
+			"value": "d40b3c6b-8e2b-4d7a-9f5b-1c2d3e4f5a6b",
+			"type": "string"
+		},
+		{
+			"key": "categorie_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productEan",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "recommendation-uri",
+			"value": "http://localhost:8084",
+			"type": "string"
+		},
+		{
+			"key": "categoryListId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "solutionsListId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -32,7 +32,7 @@ func GetAanvraagByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check of aanvraag bestaat 
+	// check of aanvraag bestaat
 	var aanvraag models.Aanvraag
 	if err := DB.Preload("Client").Preload("Behoefte").First(&aanvraag, "id = ?", aanvraagID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -294,10 +294,20 @@ func KiesProduct(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		ClientID   uuid.UUID `json:"client_id"`
 		BehoefteID uuid.UUID `json:"behoefte_id"`
-		ProductEAN int64     `json:"product_ean"`
+		ProductEAN *int64    `json:"product_ean"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Ongeldige input", http.StatusBadRequest)
+		return
+	}
+	// Aangepaste logica voor nil ProductEAN
+	if input.ProductEAN == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest) // <-- Veranderd naar HTTP 400 Bad Request
+		json.NewEncoder(w).Encode(map[string]string{
+			"error":   "missing_product_ean",                                           
+			"message": "Het 'product_ean' veld is verplicht om een product te kiezen.", 
+		})
 		return
 	}
 
@@ -310,13 +320,13 @@ func KiesProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Controleer of gekozen product toegestaan is
-	if !productToegestaan(aanvraag.ProductOpties, input.ProductEAN) {
+	if !productToegestaan(aanvraag.ProductOpties, *input.ProductEAN) {
 		http.Error(w, "Gekozen product is niet toegestaan", http.StatusBadRequest)
 		return
 	}
 
 	// 4. Sla het gekozen product op
-	if err := slaGekozenProductOp(DB, &aanvraag, input.ProductEAN); err != nil {
+	if err := slaGekozenProductOp(DB, &aanvraag, *input.ProductEAN); err != nil {
 		log.Printf("Fout bij opslaan gekozen product: %v", err)
 		http.Error(w, "Fout bij opslaan gekozen product", http.StatusInternalServerError)
 		return

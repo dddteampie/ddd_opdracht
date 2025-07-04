@@ -1,0 +1,1013 @@
+{
+  "info": {
+    "_postman_id": "behoefte-aanvraag-integratie-tests",
+    "name": "behoefte en aanvraagverwerking integratie tests met ecd en recommendatie",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "CreateClient",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response bevat clientId\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('clientId');",
+              "});",
+              "pm.collectionVariables.set(\"client_id\", pm.response.json().clientId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"naam\": \"Jan Jansen\",\n  \"adres\": \"eersteweg 3\",\n  \"geboortedatum\": \"1990-01-01T00:00:00Z\"\n}"
+        },
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/client",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "client"
+          ]
+        }
+      }
+    },
+    {
+      "name": "CreateClient zonder naam",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 bij ontbreken naam\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Response bevat foutmelding over naam\", function () {",
+              "    var data = pm.response.text();",
+              "    pm.expect(data).to.include(\"Naam\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adres\": \"eersteweg 3\",\n  \"geboortedatum\": \"1990-01-01T00:00:00Z\"\n}"
+        },
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/client",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "client"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetClientByID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response bevat juiste clientId\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.id).to.eql(pm.collectionVariables.get(\"client_id\"));",
+              "});",
+              "pm.test(\"Response bevat naam veld\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('naam');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/client/{{client_id}}",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "client",
+            "{{client_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "CreateZorgdossier",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/zorgdossier",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "zorgdossier"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"client_id\": \"{{client_id}}\",\n    \"situatie\": \"Het gaat tot nu toe heel erg slecht met de client, hij moet echt beter zn pillen gaan nemen.\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response bevat zorgdossier ID\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.collectionVariables.set(\"zorgdossier_id\", data.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetZorgdossierByClientId",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/zorgdossier/client/{{client_id}}",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "zorgdossier",
+            "client",
+            "{{client_id}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response bevat minimaal 1 zorgdossier\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"id\");",
+              "    pm.expect(data).to.have.property(\"situatie\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateOnderzoek",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/onderzoek",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "onderzoek"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"zorgdossier_id\": \"{{zorgdossier_id}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response bevat onderzoekId\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"onderzoekId\");",
+              "    pm.collectionVariables.set(\"onderzoek_id\", data.onderzoekId);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetOnderzoekById",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/onderzoek/{{onderzoek_id}}",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "onderzoek",
+            "{{onderzoek_id}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response bevat correcte onderzoekId\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.onderzoekId || data.id).to.eql(pm.collectionVariables.get(\"onderzoek_id\"));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create anamnese",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/onderzoek/{{onderzoek_id}}/anamnese",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "onderzoek",
+            "{{onderzoek_id}}",
+            "anamnese"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"onderzoek_id\": \"{{onderzoek_id}}\",\n    \"klachten\": \"Hoofdpijn, buikpijn\",\n    \"duur_klachten\": \"2 weken\",\n    \"medicatiegebruik\": \"Ibuprofen\",\n    \"allergie\u00ebn\": \"Geen\",\n    \"leefstijl\": \"Roker\",\n    \"datum\": \"2023-10-01T00:00:00Z\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Anamnese is succesvol opgeslagen en bevat anamnese velden\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"onderzoek_id\");",
+              "    pm.expect(data.klachten).to.include(\"Hoofdpijn\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create meetresultaat",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/onderzoek/{{onderzoek_id}}/meetresultaat",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "onderzoek",
+            "{{onderzoek_id}}",
+            "meetresultaat"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"onderzoek_id\": \"{{onderzoek_id}}\",\n    \"instrument_naam\": \"Thermometer\",\n    \"meetwaarde\": \"40,1\u00b0C\",\n    \"datum\": \"2023-10-01T00:00:00Z\",\n    \"uitgevoerd_door\": \"Anisa\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Meetresultaat bevat instrument en meetwaarde\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"instrument_naam\");",
+              "    pm.expect(data).to.have.property(\"meetwaarde\");",
+              "    pm.expect(data.instrument_naam).to.eql(\"Thermometer\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create diagnose",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/ecd/onderzoek/{{onderzoek_id}}/diagnose",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "ecd",
+            "onderzoek",
+            "{{onderzoek_id}}",
+            "diagnose"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"onderzoek_id\": \"{{onderzoek_id}}\",\n    \"diagnosecode\": \"F10.120\",\n    \"naam\": \"Alcohol abuse with intoxication, uncomplicated\",\n    \"toelichting\": \"Alcohol abuse with intoxication, uncomplicated refers to a medical diagnosis where a person is experiencing alcohol intoxication in a manner that is not complicated by other medical conditions or factors. This diagnosis is important for treatment and management, indicating that while the individual is facing issues related to alcohol consumption, there are no additional complications that may affect their health status.\",\n    \"datum\": \"2023-10-01T00:00:00Z\",\n    \"status\": \"Actief\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Diagnose is correct aangemaakt\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"diagnosecode\");",
+              "    pm.expect(data.naam).to.include(\"Alcohol abuse\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateBehoefte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response bevat behoefte ID\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.collectionVariables.set(\"behoefte_id\", data.id);",
+              "    console.log(\"behoefte_id na create:\", pm.collectionVariables.get(\"behoefte_id\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"onderzoek_id\": \"{{onderzoek_id}}\",\n  \"client_id\": \"{{client_id}}\",\n  \"titel\": \"Lopen\",\n  \"beschrijving\": \"Patiënt wil leren lopen na val\",\n  \"urgentie\": \"Hoog\"\n}"
+        },
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/behoefte",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "behoefte"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetBehoefteByOnderzoekID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Behoeftes bevatten correcte onderzoek_id\", function () {",
+              "    var data = pm.response.json();",
+              "    data.forEach(function (item) {",
+              "        pm.expect(item.onderzoek_id).to.eql(pm.collectionVariables.get(\"onderzoek_id\"));",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/behoefte/onderzoek/{{onderzoek_id}}",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "behoefte",
+            "onderzoek",
+            "{{onderzoek_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetBehoefteByClientID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Behoeftes bevatten correcte client_id\", function () {",
+              "    var data = pm.response.json();",
+              "    data.forEach(function (item) {",
+              "        pm.expect(item.client_id).to.eql(pm.collectionVariables.get(\"client_id\"));",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/behoefte/client/{{client_id}}",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "behoefte",
+            "client",
+            "{{client_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetBehoefteByBirthAndNAme",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response bevat lijst van behoeftes\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"client\": {\n    \"naam\": \"Jan Jansen\",\n    \"geboortedatum\": \"1990-01-01T00:00:00Z\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/behoefte/client",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "behoefte",
+            "client"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Post BehoefteNaarAanvraag",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response bevat aanvraag ID\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.collectionVariables.set(\"aanvraag_id\", data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{behoeftebepaling-uri}}/behoefte/{{behoefte_id}}/aanvraagverwerking",
+          "host": [
+            "{{behoeftebepaling-uri}}"
+          ],
+          "path": [
+            "behoefte",
+            "{{behoefte_id}}",
+            "aanvraagverwerking"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetAanvragenByClientID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/client/{{client_id}}",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "client",
+            "{{client_id}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response bevat een array met aanvragen\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an(\"array\");",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start Categorie Aanvraag",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 202\", function () {",
+              "    pm.response.to.have.status(202);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"patientId\": \"{{client_id}}\",\n    \"behoeften\": \"Pati\u00ebnt wil leren lopen na val\",\n    \"budget\": 1000\n}"
+        },
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/categorie",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "categorie"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Haal Passende Categorie\u00ebn Lijst Op",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.collectionVariables.set(\"categorie_id\", pm.response.json().categories[0].id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/recommendatie/categorie/?patientId={{client_id}}",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "recommendatie",
+            "categorie",
+            ""
+          ],
+          "query": [
+            {
+              "key": "patientId",
+              "value": "{{client_id}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Kies Categorie",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"client_id\": \"{{client_id}}\",\n    \"behoefte_id\": \"{{behoefte_id}}\",\n    \"categorie\": {{categorie_id}}\n}"
+        },
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/categorie/kies",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "categorie",
+            "kies"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Start Productaanvraag",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 202\", function () {",
+              "    pm.response.to.have.status(202);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{client_id}}\",\n  \"behoeften\": \"Pati\u00ebnt wil leren lopen na val\",\n  \"budget\": 1000,\n  \"CategorieID\": {{categorie_id}}\n}"
+        },
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/product",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "product"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Haal Passende Producten Op",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var producten = pm.response.json().producten;",
+              "if (producten && producten.length > 0) {",
+              "    pm.collectionVariables.set(\"productEan\", producten[0].ean);",
+              "} else {",
+              "    pm.collectionVariables.set(\"productEan\", null);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/recommendatie/product/?clientId={{client_id}}&behoefteId={{behoefte_id}}&categorieId={{categorie_id}}",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "recommendatie",
+            "product",
+            ""
+          ],
+          "query": [
+            {
+              "key": "clientId",
+              "value": "{{client_id}}"
+            },
+            {
+              "key": "behoefteId",
+              "value": "{{behoefte_id}}"
+            },
+            {
+              "key": "categorieId",
+              "value": "{{categorie_id}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Kies Product",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "if (!pm.collectionVariables.get(\"productEan\")) {",
+              "    postman.setNextRequest(null);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 als gekozen, 400 als leeg\", function () {",
+              "    if (!pm.collectionVariables.get(\"productEan\")) {",
+              "        pm.expect(pm.response.code).to.eql(400);",
+              "        pm.expect(pm.response.json().error).to.eql(\"missing_product_ean\");",
+              "    } else {",
+              "        pm.expect(pm.response.code).to.eql(200);",
+              "    }",
+              "});",
+              "pm.test(\"Response structuur klopt\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (pm.response.code === 200) {",
+              "        pm.expect(jsonData).to.have.property(\"product_ean\");",
+              "        pm.expect(jsonData.product_ean).to.eql(Number(pm.collectionVariables.get(\"productEan\")));",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"client_id\": \"{{client_id}}\",\n    \"behoefte_id\": \"{{behoefte_id}}\",\n    \"product_ean\": {{productEan}}\n}"
+        },
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/product/kies",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "product",
+            "kies"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GetAanvraagById",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{aanvraagverwerking-uri}}/aanvraag/{{aanvraag_id}}",
+          "host": [
+            "{{aanvraagverwerking-uri}}"
+          ],
+          "path": [
+            "aanvraag",
+            "{{aanvraag_id}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Aanvraag bevat juiste client_id\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.client_id).to.eql(pm.collectionVariables.get(\"client_id\"));",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "client_id",
+      "value": ""
+    },
+    {
+      "key": "zorgdossier_id",
+      "value": ""
+    },
+    {
+      "key": "onderzoek_id",
+      "value": ""
+    },
+    {
+      "key": "behoefte_id",
+      "value": ""
+    },
+    {
+      "key": "aanvraagverwerking-uri",
+      "value": "http://localhost:8085",
+      "type": "string"
+    },
+    {
+      "key": "behoeftebepaling-uri",
+      "value": "http://localhost:8083",
+      "type": "string"
+    },
+    {
+      "key": "aanvraag_id",
+      "value": ""
+    },
+    {
+      "key": "categorie_id",
+      "value": ""
+    },
+    {
+      "key": "productEan",
+      "value": ""
+    }
+  ]
+}

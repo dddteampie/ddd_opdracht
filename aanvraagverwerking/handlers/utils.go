@@ -260,19 +260,3 @@ func slaGekozenProductOp(db *gorm.DB, aanvraag *models.Aanvraag, gekozenEAN int6
     aanvraag.Status = models.ProductGekozen
     return db.Save(aanvraag).Error
 }
-
-// func ExtractAanvraagID(r *http.Request) (uuid.UUID, error) {
-//     parts := strings.Split(r.URL.Path, "/")
-//     if len(parts) < 3 {
-//         return uuid.Nil, errors.New("geen aanvraag ID in path")
-//     }
-//     return uuid.Parse(parts[2])
-// }
-
-// func HaalAanvraagOp(db *gorm.DB, id uuid.UUID) (models.Aanvraag, error) {
-//     var aanvraag models.Aanvraag
-//     err := db.First(&aanvraag, "id = ?", id).Error
-//     return aanvraag, err
-// }
-
-// Voeg hier ook units toe voor andere handlers, zoals validatie, ophalen van lijsten, etc.

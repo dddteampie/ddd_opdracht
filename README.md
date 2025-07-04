@@ -16,7 +16,7 @@ Services:
 - /Ecd service
 
 Overigen:
-- Aws omgeving in elkaar geflanst
+- AWS omgeving in elkaar geflanst
 - S3 Buckets
 - ECS containers
 - Load balancer

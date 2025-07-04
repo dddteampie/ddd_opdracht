@@ -20,6 +20,10 @@ func (s *ECDServiceImpl) GetClient(ctx context.Context, id uuid.UUID) (*dto.Clie
 	return s.repo.GetClientByID(id)
 }
 
+func (s *ECDServiceImpl) GetAllClients(ctx context.Context) ([]dto.ClientDTO, error) {
+	return s.repo.GetAllClients()
+}
+
 func (s *ECDServiceImpl) CreateClient(ctx context.Context, dto dto.ClientDTO) error {
 	return s.repo.SaveClient(dto)
 }

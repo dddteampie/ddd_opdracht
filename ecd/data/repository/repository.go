@@ -8,6 +8,7 @@ import (
 
 type Repository interface {
 	GetClientByID(id uuid.UUID) (*dto.ClientDTO, error)
+	GetAllClients() ([]dto.ClientDTO, error)
 	SaveClient(dto dto.ClientDTO) error
 	GetZorgdossierByClientID(clientID uuid.UUID) (*dto.ZorgdossierDTO, error)
 	SaveZorgdossier(dto dto.ZorgdossierDTO) error

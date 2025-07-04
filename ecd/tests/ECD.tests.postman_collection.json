@@ -151,6 +151,39 @@
 			"response": []
 		},
 		{
+			"name": "Get all Clients",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ecd-uri}}/api/client/",
+					"host": [
+						"{{ecd-uri}}"
+					],
+					"path": [
+						"api",
+						"client",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Create Zorgdossier",
 			"event": [
 				{
@@ -504,7 +537,7 @@
 	"variable": [
 		{
 			"key": "ecd-uri",
-			"value": "http://localhost:8082",
+			"value": "http://localhost:8082/ecd",
 			"type": "string"
 		},
 		{

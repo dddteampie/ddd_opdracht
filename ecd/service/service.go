@@ -9,6 +9,7 @@ import (
 
 type ECDService interface {
 	GetClient(ctx context.Context, id uuid.UUID) (*dto.ClientDTO, error)
+	GetAllClients(ctx context.Context) ([]dto.ClientDTO, error)
 	CreateClient(ctx context.Context, dto dto.ClientDTO) error
 
 	GetZorgdossierByClientID(ctx context.Context, clientID uuid.UUID) (*dto.ZorgdossierDTO, error)

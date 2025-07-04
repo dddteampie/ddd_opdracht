@@ -33,19 +33,20 @@ func main() {
 
 	// Router setup
 	r := mux.NewRouter()
-	r.Handle("/aanvraag", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartAanvraag))).Methods("POST")
-	r.Handle("/aanvraag/{id}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvraagByID))).Methods("GET")
-	r.Handle("/aanvraag/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvragenByClientID))).Methods("GET")
 
-	r.Handle("/aanvraag/categorie", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartCategorieAanvraag))).Methods("PUT")
-	r.Handle("/aanvraag/categorie/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesCategorie))).Methods("POST")
-	r.Handle("/aanvraag/product", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartProductAanvraag))).Methods("PUT")
-	r.Handle("/aanvraag/product/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesProduct))).Methods("POST")
+  r.HandleFunc("/aanvraagverwerking/api/health", handlers.HealthCheckHandler).Methods("GET")
+	r.Handle("/aanvraagverwerking/aanvraag", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartAanvraag))).Methods("POST")
+	r.Handle("/aanvraagverwerking/aanvraag/{id}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvraagByID))).Methods("GET")
+	r.Handle("/aanvraagverwerking/aanvraag/client/{clientId}", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.GetAanvragenByClientID))).Methods("GET")
+
+	r.Handle("/aanvraagverwerking/aanvraag/categorie", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartCategorieAanvraag))).Methods("PUT")
+	r.Handle("/aanvraagverwerking/aanvraag/categorie/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesCategorie))).Methods("POST")
+	r.Handle("/aanvraagverwerking/aanvraag/product", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.StartProductAanvraag))).Methods("PUT")
+	r.Handle("/aanvraagverwerking/aanvraag/product/kies", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.KiesProduct))).Methods("POST")
 
 	r.Handle("/aanvraag/recommendatie/categorie/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeCategorieenLijstOp))).Methods("GET")
 	r.Handle("/aanvraag/recommendatie/product/", auth.NewAuthZMiddleware(authConfig, []string{"healthcare_worker"}, http.HandlerFunc(handlers.HaalPassendeProductenLijstOp))).Methods("GET")
 	
-	r.HandleFunc("/api/health", handlers.HealthCheckHandler).Methods("GET")
 	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
 	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
 }

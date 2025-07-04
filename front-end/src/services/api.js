@@ -26,6 +26,7 @@ const callApi = async (serviceName, endpoint, options = {}) => {
   const baseUrl = getApiBaseUrl(serviceName); // Haal de service-specifieke URL op
 
   const response = await fetch(`${baseUrl}${endpoint}`, {
+    method: options.method || 'GET',
     ...options,
     headers,
   });
@@ -33,6 +34,7 @@ const callApi = async (serviceName, endpoint, options = {}) => {
   if (!response.ok) {
     let errorDetail = await response.text();
     try {
+      console.log("lskdjflksdjf", response)
       const errorJson = JSON.parse(errorDetail);
       errorDetail = errorJson.message || errorDetail;
     } catch (e) {

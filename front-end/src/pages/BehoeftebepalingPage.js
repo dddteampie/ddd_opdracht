@@ -32,7 +32,6 @@ const BehoeftebepalingPage = () => {
     const [aanvragen, setAanvragen] = useState([]); // New state for aanvragen
     const [loading, setLoading] = useState(true);
     const [form] = Form.useForm();
-    const [selectedBehoefte, setSelectedBehoefte] = useState(null);
     const [selectedAanvraag, setSelectedAanvraag] = useState(null); // New state for selected aanvraag
     const [categorieen, setCategorieen] = useState([]);
     const [producten, setProducten] = useState([]); // New state for recommended products
@@ -136,7 +135,7 @@ const BehoeftebepalingPage = () => {
         }
     };
 
-    const handleStartAanvraag = async (behoefte, behoefteId) => {
+    const handleStartAanvraag = async (behoefte) => {
         setLoading(true);
         try {
             // Need client data for StartAanvraag handler. Assuming `behoefte` object has `client_id`.
@@ -146,8 +145,8 @@ const BehoeftebepalingPage = () => {
                 client: clientData,
                 behoefte: behoefte,
             };
-            console.log(aanvraagPayload, behoefteId)
-            const newAanvraag = await startAanvraag(aanvraagPayload, behoefteId);
+            console.log(aanvraagPayload, behoefte.id);
+            const newAanvraag = await startAanvraag(aanvraagPayload, behoefte.id);
             message.success(`Aanvraag voor behoefte "${behoefte.titel}" succesvol gestart.`);
             setSelectedAanvraag(newAanvraag); // Set the newly created aanvraag as selected
             await loadData(); // Reload aanvragen list
@@ -174,15 +173,22 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
         console.log(aanvraagToProcess.Behoefte)
         const inputData = {
             patientId: aanvraagToProcess.client_id,
+            budget: aanvraagToProcess.budget || 20000,
             behoeften: aanvraagToProcess.Behoefte.beschrijving,
         };
         console.log(inputData)
         await startCategorieAanvraag(inputData);
+        // Only show success if no error is thrown
         message.success("Categorie-aanvraag gestart. Categorieën ophalen...");
 
         const response = await getPassendeCategorieenLijst(aanvraagToProcess.client_id);
-        setCategorieen(response.categorielijst);
-        message.success("Categorieën succesvol opgehaald.");
+        if (response?.categories) {
+            setCategorieen(response.categories);
+            message.success("Categorieën succesvol opgehaald.");
+        } else {
+            message.warning("Geen categorieën gevonden in het antwoord.");
+            setCategorieen([]);
+        }
         await loadData();
     } catch (error) {
         message.error("Fout bij opvragen categorie aanbeveling: " + (error.message || error));
@@ -222,21 +228,24 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
         setSelectedAanvraag(aanvraagToProcess); // Ensure the correct aanvraag is selected
         setLoading(true);
         try {
-            if (!aanvraagToProcess.GekozenCategorieID) {
+            if (!aanvraagToProcess.gekozen_categorie_id) {
                 message.warning("Er is nog geen categorie gekozen voor deze aanvraag.");
+                setLoading(false);
                 return;
             }
 
             const inputData = {
-                client_id: aanvraagToProcess.client_id,
-                behoefte_beschrijving: aanvraagToProcess.behoefte.beschrijving,
-                gekozen_categorie_id: aanvraagToProcess.GekozenCategorieID,
+                clientId: aanvraagToProcess.client_id,
+                budget: aanvraagToProcess.budget || 20000,
+                behoeften: aanvraagToProcess.Behoefte.beschrijving,
+                CategorieID: aanvraagToProcess.gekozen_categorie_id,
             };
+            console.log(JSON.stringify(inputData));
             await startProductAanvraag(inputData);
             message.success("Product-aanvraag gestart. Producten ophalen...");
 
             const response = await getPassendeProductenLijst(aanvraagToProcess.client_id);
-            setProducten(response.productlijst);
+            setProducten(response.products);
             message.success("Producten succesvol opgehaald.");
             await loadData(); // Refresh aanvragen to show updated status
         } catch (error) {
@@ -344,7 +353,7 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                             actions={[
                                 <Button
                                     key="start-aanvraag"
-                                    onClick={() => handleStartAanvraag(behoefte, behoefte.id)}
+                                    onClick={() => handleStartAanvraag(behoefte)}
                                     disabled={loading || aanvragen.some(a => a.behoefte_id === behoefte.id)}
                                 >
                                     Start Aanvraag
@@ -376,7 +385,7 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                         <List.Item
                             actions={[
                                 // Only show "Vraag Categorie Advies" if no category is chosen yet and it's not waiting for a category choice
-                                (!aanvraag.GekozenCategorieID && aanvraag.Status !== 1) && (
+                                (!aanvraag.gekozen_categorie_id && aanvraag.status !== 1) && (
                                     <Button
                                         key="advies"
                                         onClick={() => handleStartCategorieAanvraag(aanvraag)}
@@ -386,7 +395,7 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                                     </Button>
                                 ),
                                 // Show "Vraag Product Advies" if a category is chosen and no product is chosen yet
-                                (aanvraag.GekozenCategorieID && !aanvraag.GekozenProductID && aanvraag.Status !== 2) && (
+                                (aanvraag.gekozen_categorie_id && !aanvraag.gekozen_product_id && aanvraag.status !== 2) && (
                                     <Button
                                         key="product-advies"
                                         onClick={() => handleStartProductAanvraag(aanvraag)}
@@ -403,10 +412,10 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                                     <>
                                         <Paragraph>Aanvraag ID: {aanvraag.id}</Paragraph>
                                         <Paragraph>Behoefte ID: {aanvraag.behoefte_id}</Paragraph>
-                                        <Paragraph>Status: **{aanvraag.StatusString || aanvraag.Status}**</Paragraph>
-                                        <Paragraph>Budget: €{aanvraag.Budget ? aanvraag.Budget.toFixed(2) : 'N.v.t.'}</Paragraph>
-                                        {aanvraag.GekozenCategorieID && <Paragraph>Gekozen Categorie ID: {aanvraag.GekozenCategorieID}</Paragraph>}
-                                        {aanvraag.GekozenProductID && <Paragraph>Gekozen Product EAN: {aanvraag.GekozenProductID}</Paragraph>}
+                                        <Paragraph>Status: **{aanvraag.StatusString || aanvraag.status}**</Paragraph>
+                                        <Paragraph>Budget: €{aanvraag.budget ? aanvraag.budget.toFixed(2) : 'N.v.t.'}</Paragraph>
+                                        {aanvraag.gekozen_categorie_id && <Paragraph>Gekozen Categorie ID: {aanvraag.gekozen_categorie_id}</Paragraph>}
+                                        {aanvraag.gekozen_product_id && <Paragraph>Gekozen Product EAN: {aanvraag.gekozen_product_id}</Paragraph>}
                                     </>
                                 }
                             />
@@ -423,14 +432,14 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                         renderItem={(categorie) => (
                             <List.Item
                                 actions={[
-                                    <Button key="select-cat" onClick={() => handleKiesCategorie(categorie.ID)}>
+                                    <Button key="select-cat" onClick={() => handleKiesCategorie(categorie.id)}>
                                         Kies deze Categorie
                                     </Button>,
                                 ]}
                             >
                                 <List.Item.Meta
-                                    title={categorie.Naam}
-                                    description={`ID: ${categorie.ID}`}
+                                    title={categorie.naam}
+                                    description={`ID: ${categorie.id}`}
                                 />
                             </List.Item>
                         )}
@@ -438,26 +447,26 @@ const handleStartCategorieAanvraag = async (aanvraagToProcess) => {
                 </Card>
             )}
 
-            {producten.length > 0 && selectedAanvraag && selectedAanvraag.GekozenCategorieID && (
-                <Card title={`Gevonden Producten voor Aanvraag: ${selectedAanvraag.id} (Categorie: ${selectedAanvraag.GekozenCategorieID})`} style={{ marginTop: '20px' }}>
+            {producten.length > 0 && selectedAanvraag?.gekozen_categorie_id && (
+                <Card title={`Gevonden Producten voor Aanvraag: ${selectedAanvraag.id} (Categorie: ${selectedAanvraag.gekozen_categorie_id})`} style={{ marginTop: '20px' }}>
                     <List
                         bordered
                         dataSource={producten}
                         renderItem={(product) => (
                             <List.Item
                                 actions={[
-                                    <Button key="select-product" onClick={() => handleKiesProduct(product.EAN)}>
+                                    <Button key="select-product" onClick={() => handleKiesProduct(product.ean)}>
                                         Kies dit Product
                                     </Button>,
                                 ]}
                             >
                                 <List.Item.Meta
-                                    title={product.Naam}
+                                    title={product.naam}
                                     description={
                                         <>
-                                            <Paragraph>EAN: {product.EAN}</Paragraph>
-                                            <Paragraph>Prijs: €{product.Prijs ? product.Prijs.toFixed(2) : 'N.v.t.'}</Paragraph>
-                                            <Paragraph>Beschrijving: {product.Beschrijving}</Paragraph>
+                                            <Paragraph>EAN: {product.ean}</Paragraph>
+                                            <Paragraph>Prijs: €{product.prijs ? product.prijs.toFixed(2) : 'N.v.t.'}</Paragraph>
+                                            <Paragraph>Beschrijving: {product.beschrijving}</Paragraph>
                                         </>
                                     }
                                 />

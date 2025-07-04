@@ -17,11 +17,11 @@ export const startCategorieAanvraag = async (inputData) => {
 };
 
 export const getPassendeCategorieenLijst = async (clientId) => {
-  return callApi("aanvraag", `/aanvraag/categorie/client?clientId=${clientId}`);
+  return callApi("aanvraag", `/aanvraag/recommendatie/categorie/?patientId=${clientId}`);
 };
 
 export const kiesCategorie = async (inputData) => {
-  return callApi("behoefte", '/aanvraag/categorie/kies', {
+  return callApi("aanvraag", '/aanvraag/categorie/kies', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),
@@ -37,7 +37,7 @@ export const startProductAanvraag = async (inputData) => {
 };
 
 export const getPassendeProductenLijst = async (clientId) => {
-  return callApi("behoefte", `/aanvraag/recommendatie/product/?clientId=${clientId}`);
+  return callApi("aanvraag", `/aanvraag/recommendatie/product/?clientId=${clientId}`);
 };
 
 export const getZorgdossierByClientId = async (clientId) => {
@@ -101,7 +101,7 @@ export const createDiagnose = async (onderzoekId, data) => {
 };
 
 export const kiesProduct = async (inputData) => {
-  return callApi("behoefte", '/aanvraag/product/kies', {
+  return callApi("aanvraag", '/aanvraag/product/kies', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(inputData),

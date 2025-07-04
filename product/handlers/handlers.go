@@ -118,8 +118,7 @@ func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
 				Joins("JOIN product_tags ON product_tags.product_ean = products.ean").
 				Joins("JOIN tags ON tags.id = product_tags.tag_id").
 				Where("tags.naam IN (?)", tags).
-				Group("products.ean").
-				Having("COUNT(DISTINCT tags.naam) = ?", len(tags))
+				Group("products.ean")
 		} else {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode([]models.Product{})

@@ -140,7 +140,6 @@ func StartCategorieAanvraag(w http.ResponseWriter, r *http.Request) {
 
 	// 5. Geef een succesvolle response terug
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("Categorie-aanvraag gestart"))
 }
 
 func HaalPassendeCategorieenLijstOp(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +209,6 @@ func KiesCategorie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Categorie succesvol gekozen"))
 }
 
 func StartProductAanvraag(w http.ResponseWriter, r *http.Request) {
@@ -254,7 +252,6 @@ func StartProductAanvraag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("Product-aanvraag gestart"))
 }
 
 func HaalPassendeProductenLijstOp(w http.ResponseWriter, r *http.Request) {
@@ -334,5 +331,4 @@ func KiesProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Product succesvol gekozen"))
 }

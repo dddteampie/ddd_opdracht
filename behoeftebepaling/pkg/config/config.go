@@ -3,14 +3,17 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	DatabaseDSN string `json:"database_dsn"`
-	ServerPort  string `json:"server_port"`
-	CorsOrigin  string `json:"CorsOrigin"`
+	DatabaseDSN  string `json:"database_dsn"`
+	ServerPort   string `json:"server_port"`
+	CorsOrigin   string `json:"CorsOrigin"`
+	AuthzDevMode bool   `json:"AuthzDevMode"`
+	AanvraagUrl  string `json:"aanvraag_url"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -46,6 +49,13 @@ func LoadConfigFromEnv() (*Config, error) {
 	if CorsOrigin := os.Getenv("CorsOrigin"); CorsOrigin != "" {
 		cfg.CorsOrigin = CorsOrigin
 	}
+	if AuthzDevMode := os.Getenv("AuthzDevMode"); AuthzDevMode != "" {
+		cfg.AuthzDevMode, _ = strconv.ParseBool(AuthzDevMode)
+	}
+
+	if AanvraagUrl := os.Getenv("AANVRAAG_URL"); AanvraagUrl != "" {
+		cfg.AanvraagUrl = AanvraagUrl
+	}
 
 	return cfg, nil
 }
@@ -63,6 +73,7 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
 	cfg.CorsOrigin = os.Getenv("CorsOrigin")
+	cfg.AuthzDevMode, _ = strconv.ParseBool(os.Getenv("AuthzDevMode"))
 
 	if cfg.DatabaseDSN == "" {
 		log.Println("Warning: DATABASE_DSN is not set in the .env file.")
@@ -72,6 +83,10 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	}
 	if cfg.CorsOrigin == "" {
 		log.Println("Warning: CorsOrigin is not set in the .env file.")
+	}
+
+	if cfg.AanvraagUrl == "" {
+		log.Println("Warning: AANVRAAG_URL is not set in the .env file.")
 	}
 
 	return cfg, nil

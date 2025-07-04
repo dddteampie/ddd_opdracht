@@ -1,0 +1,30 @@
+name: CI Test Aanvraagverwerking
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'aanvraagverwerking/**' ]
+  pull_request:
+    paths: [ 'aanvraagverwerking/**', '.github/workflows/ci.aanvraagverwerking.yml' ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24.3'
+
+    - name: Download Go modules
+      run: go mod tidy
+      working-directory: ./aanvraagverwerking
+
+    - name: Run Go tests
+      run: go test -v ./...
+      working-directory: ./aanvraagverwerking

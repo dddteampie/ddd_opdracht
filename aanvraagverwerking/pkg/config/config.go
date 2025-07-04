@@ -10,6 +10,7 @@ import (
 type Config struct {
 	DatabaseDSN string `json:"database_dsn"`
 	ServerPort  string `json:"server_port"`
+	CorsOrigin  string `json:"CorsOrigin"`
 }
 
 func LoadConfig(filePath string) (*Config, error) {
@@ -42,6 +43,9 @@ func LoadConfigFromEnv() (*Config, error) {
 	if serverPort := os.Getenv("SERVER_PORT"); serverPort != "" {
 		cfg.ServerPort = serverPort
 	}
+	if CorsOrigin := os.Getenv("CorsOrigin"); CorsOrigin != "" {
+		cfg.CorsOrigin = CorsOrigin
+	}
 
 	return cfg, nil
 }
@@ -58,12 +62,16 @@ func LoadConfigFromFile(filePath string) (*Config, error) {
 	cfg := &Config{}
 	cfg.DatabaseDSN = os.Getenv("DATABASE_DSN")
 	cfg.ServerPort = os.Getenv("SERVER_PORT")
+	cfg.ServerPort = os.Getenv("CorsOrigin")
 
 	if cfg.DatabaseDSN == "" {
 		log.Println("Warning: DATABASE_DSN is not set in the .env file.")
 	}
 	if cfg.ServerPort == "" {
 		log.Println("Warning: SERVER_PORT is not set in the .env file.")
+	}
+	if cfg.CorsOrigin == "" {
+		log.Println("Warning: CorsOrigin is not set in the .env file.")
 	}
 
 	return cfg, nil

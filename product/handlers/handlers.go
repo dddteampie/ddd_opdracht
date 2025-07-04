@@ -70,6 +70,7 @@ func HaalProductenOp(w http.ResponseWriter, r *http.Request) {
 		Preload("ProductAanbod.Supplier").
 		Preload("Tags").
 		Preload("Categorieen").
+		Preload("Reviews").
 		Where("products.deleted_at IS NULL")
 
 	eansStr := r.URL.Query().Get("eans")

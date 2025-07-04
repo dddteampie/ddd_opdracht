@@ -135,6 +135,21 @@ func (h *Handler) GetOnderzoekByIDHandler(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(onderzoek)
 }
 
+func (h *Handler) GetOnderzoekByDossierIdHandler(w http.ResponseWriter, r *http.Request) {
+	var dossierId, err = GetUUIDFromRequest(r, "dossierId")
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	onderzoek, err := h.ECD.GetOnderzoekByDossierId(r.Context(), dossierId)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(onderzoek)
+}
+
 func (h *Handler) UpdateOnderzoekHandler(w http.ResponseWriter, r *http.Request) {
 	var onderzoekID, err = GetUUIDFromRequest(r, "onderzoekId")
 	if err != nil {

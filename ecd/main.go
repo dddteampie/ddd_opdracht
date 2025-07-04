@@ -13,9 +13,33 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
+func corsMiddleware(allowedOrigin string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestOrigin := r.Header.Get("Origin")
+
+			if allowedOrigin == "*" || requestOrigin == allowedOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
+			} else {
+			}
+
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
 	handler := &handler.Handler{}
 
 	config, err := config.LoadConfig("ecd.env")
@@ -27,6 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+	r.Use(corsMiddleware(config.CorsOrigin))
 
 	repository := repository.NewGormRepository(db)
 	service := service.NewECDService(repository)
@@ -59,8 +84,10 @@ func main() {
 				r.Post("/{onderzoekId}/diagnose", handler.AddDiagnoseHandler)
 				r.Get("/{onderzoekId}", handler.GetOnderzoekByIDHandler)
 				r.Put("/{onderzoekId}", handler.UpdateOnderzoekHandler)
+				r.Get("/dossier/{dossierId}", handler.GetOnderzoekByDossierIdHandler)
 			})
 		})
+
 	})
 	log.Printf("ECD service is running on %s...", config.ServerPort)
 	http.ListenAndServe(config.ServerPort, r)

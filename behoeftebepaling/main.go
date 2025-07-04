@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"os"
 
+	ghandler "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	// Load config from .env
-	cfg, err := config.LoadConfig(".env")
+	cfg, err := config.LoadConfig("behoeftebepaling.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -48,6 +49,17 @@ func main() {
 	r.HandleFunc("/behoeftebepaling/ecd/onderzoek", handlers.KoppelOnderzoekHandler).Methods("POST")
 	r.HandleFunc("/behoeftebepaling/ecd/onderzoek/{onderzoekId}", handlers.GetOnderzoekByIdHandler).Methods("GET")
 
+	allowedMethods := ghandler.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+
+	allowedHeaders := ghandler.AllowedHeaders([]string{"Content-Type", "Authorization"})
+
+	corsRouter := ghandler.CORS(
+		ghandler.AllowedOrigins([]string{cfg.CorsOrigin}),
+		allowedMethods,
+		allowedHeaders,
+		ghandler.MaxAge(86400),
+	)(r)
+
 	log.Printf("Behoeftebepaling-service draait op %s...", cfg.ServerPort)
-	log.Fatal(http.ListenAndServe(cfg.ServerPort, r))
+	log.Fatal(http.ListenAndServe(cfg.ServerPort, corsRouter))
 }

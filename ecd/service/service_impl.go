@@ -55,6 +55,9 @@ func (s *ECDServiceImpl) AddMeetresultaat(ctx context.Context, onderzoekID uuid.
 func (s *ECDServiceImpl) GetOnderzoekByID(ctx context.Context, onderzoekID uuid.UUID) (*dto.OnderzoekDTO, error) {
 	return s.repo.GetOnderzoekByID(onderzoekID)
 }
+func (s *ECDServiceImpl) GetOnderzoekByDossierId(ctx context.Context, zorgdossierId uuid.UUID) (*dto.OnderzoekDTO, error) {
+	return s.repo.GetOnderzoekByDossierId(zorgdossierId)
+}
 
 func (s *ECDServiceImpl) GetOnderzoekenByZorgdossierID(ctx context.Context, zorgdossierID uuid.UUID) ([]dto.OnderzoekDTO, error) {
 	return s.repo.GetOnderzoekenByZorgdossierID(zorgdossierID)

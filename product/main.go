@@ -7,18 +7,39 @@ import (
 	"product/handlers"
 	"product/pkg/auth"
 	"product/pkg/config"
-	product_repo "product/repository" // Import the new database package
+	product_repo "product/repository"
 )
 
+func corsMiddleware(allowedOrigin string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestOrigin := r.Header.Get("Origin")
+
+			if allowedOrigin == "*" || requestOrigin == allowedOrigin {
+				w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
+			}
+
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func main() {
-	//load correct config
 	config, err := config.LoadConfig("product.env")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 	log.Printf("Configuration loaded")
 
-	//initialize config
 	db, err := product_repo.InitDB(config.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
@@ -32,6 +53,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	corsHandler := corsMiddleware(config.CorsOrigin)(mux)
+
 	mux.Handle("/product/product/suppliers", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalProductLeveraarsOp)))
 	mux.Handle("/product/product", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalProductenOp)))
 	mux.Handle("/product/categorieen", auth.NewAuthZMiddleware(authConfig, []string{}, http.HandlerFunc(handlers.HaalCategorieenOp)))
@@ -42,5 +65,5 @@ func main() {
 	mux.HandleFunc("/product/api/health", handlers.HealthCheckHandler)
 
 	log.Printf("Product-service draait op %s...", config.ServerPort)
-	log.Fatal(http.ListenAndServe(config.ServerPort, mux))
+	log.Fatal(http.ListenAndServe(config.ServerPort, corsHandler))
 }

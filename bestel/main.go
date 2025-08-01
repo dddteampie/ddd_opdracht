@@ -22,7 +22,7 @@ func main() {
 	r.Use(middleware_bestel.CorsMiddleware(config.CorsOrigin))
 
 	r.Route("/bestel", func(r chi.Router) {
-		r.Route("/health", func(r chi.Router) {
+		r.Route("/api/health", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("OK"))

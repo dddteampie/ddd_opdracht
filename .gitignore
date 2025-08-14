@@ -2,6 +2,7 @@ bin/
 out/
 dist/
 node_modules/
+.vs
 .vscode-test/
 .DS_Store
 .user-data-dir-test/

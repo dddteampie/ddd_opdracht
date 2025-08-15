@@ -121,6 +121,23 @@ services:
     networks:
       - app-network
 
+  bestel:
+    build: 
+      context: ./bestel
+      dockerfile: Dockerfile
+    container_name: bestel
+    ports:
+      - "8085:8080"
+    env_file:
+    - ./bestel/bestel.env
+    environment:
+      - DOCKERIZED_ENV=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
   discovery:
     image: nginx:1.27.4-alpine
     container_name: discovery

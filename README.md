@@ -41,3 +41,10 @@ Overigen:
 - tests
 - 70% van de frontend
 - maken van de github repo
+
+**Timo:**
+Services:
+- technologiebestelservice
+
+Overigen:
+- 
